@@ -1,0 +1,289 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  ADMIN
+  EDITOR
+  VIEWER
+}
+
+enum OpportunityStatus {
+  INTAKE
+  TRIAGE
+  READY_FOR_DRAFT
+  ARCHIVED
+}
+
+enum OpportunityPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum DraftStatus {
+  OUTLINE
+  IN_REVIEW
+  APPROVED
+  SCHEDULED
+  PUBLISHED
+}
+
+enum AccountStatus {
+  PENDING
+  APPROVED
+  PAUSED
+}
+
+enum DistributionTaskStatus {
+  TODO
+  IN_PROGRESS
+  COMPLETE
+  BLOCKED
+}
+
+enum JobRunStatus {
+  PENDING
+  RUNNING
+  SUCCEEDED
+  FAILED
+}
+
+enum VisibilityEventType {
+  PAGE_VIEW
+  CTA_CLICK
+}
+
+enum ReviewTrigger {
+  REPORT_DELIVERED
+  SUPPORT_RESOLVED
+  REFUND_RESOLVED
+}
+
+enum ReviewInviteStatus {
+  DRAFT
+  SCHEDULED
+  SENT
+  FEEDBACK_RECEIVED
+  PUBLIC_SHARE_READY
+  COMPLETED
+  CLOSED_NO_SHARE
+}
+
+enum ReviewSentiment {
+  POSITIVE
+  NEUTRAL
+  NEGATIVE
+  MIXED
+}
+
+enum ReviewReportWindow {
+  WEEK
+  MONTH
+}
+
+model User {
+  id                String             @id @default(cuid())
+  email             String             @unique
+  name              String
+  passwordHash      String
+  role              UserRole           @default(EDITOR)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  ownedOpportunities Opportunity[]     @relation("OpportunityOwner")
+  createdDrafts     Draft[]            @relation("DraftCreator")
+  reviewDrafts      Draft[]            @relation("DraftReviewer")
+  assignedTasks     DistributionTask[] @relation("TaskAssignee")
+  reviewInvites     ReviewInvite[]     @relation("ReviewInviteOwner")
+  auditEvents       AuditEvent[]
+}
+
+model Opportunity {
+  id          String              @id @default(cuid())
+  title       String
+  summary     String
+  sourceName  String
+  sourceUrl   String?
+  status      OpportunityStatus   @default(INTAKE)
+  priority    OpportunityPriority @default(MEDIUM)
+  tags        String[]
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  ownerId     String?
+  owner       User?               @relation("OpportunityOwner", fields: [ownerId], references: [id])
+  drafts      Draft[]
+}
+
+model Draft {
+  id             String                @id @default(cuid())
+  title          String
+  body           String                @db.Text
+  status         DraftStatus           @default(OUTLINE)
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+  opportunityId  String?
+  createdById    String
+  reviewerId     String?
+  opportunity    Opportunity?          @relation(fields: [opportunityId], references: [id])
+  createdBy      User                  @relation("DraftCreator", fields: [createdById], references: [id])
+  reviewer       User?                 @relation("DraftReviewer", fields: [reviewerId], references: [id])
+  tasks          DistributionTask[]
+}
+
+model DistributionAccount {
+  id           String             @id @default(cuid())
+  platform     String
+  handle       String
+  displayName  String
+  status       AccountStatus      @default(PENDING)
+  approvedAt   DateTime?
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  tasks        DistributionTask[]
+
+  @@unique([platform, handle])
+}
+
+model DistributionTask {
+  id             String                 @id @default(cuid())
+  status         DistributionTaskStatus @default(TODO)
+  scheduledFor   DateTime?
+  completedAt    DateTime?
+  notes          String?
+  createdAt      DateTime               @default(now())
+  updatedAt      DateTime               @updatedAt
+  draftId        String
+  accountId      String
+  assigneeId     String?
+  draft          Draft                  @relation(fields: [draftId], references: [id])
+  account        DistributionAccount    @relation(fields: [accountId], references: [id])
+  assignee       User?                  @relation("TaskAssignee", fields: [assigneeId], references: [id])
+}
+
+model AuditEvent {
+  id         String   @id @default(cuid())
+  entityType String
+  entityId   String
+  action     String
+  payload    Json?
+  createdAt  DateTime @default(now())
+  actorId    String?
+  actor      User?    @relation(fields: [actorId], references: [id])
+}
+
+model JobRun {
+  id           String       @id @default(cuid())
+  kind         String
+  payload      Json?
+  status       JobRunStatus @default(PENDING)
+  attempts     Int          @default(0)
+  scheduledFor DateTime     @default(now())
+  startedAt    DateTime?
+  finishedAt   DateTime?
+  error        String?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@index([status, scheduledFor])
+}
+
+model VisibilityEvent {
+  id         String              @id @default(cuid())
+  pathname   String
+  eventType  VisibilityEventType
+  pageTitle  String?
+  ctaLabel   String?
+  ctaHref    String?
+  sessionId  String
+  referrer   String?
+  userAgent  String?
+  occurredAt DateTime            @default(now())
+  createdAt  DateTime            @default(now())
+
+  @@index([pathname, occurredAt])
+  @@index([eventType, occurredAt])
+}
+
+model AiVisibilityReport {
+  id                 String   @id @default(cuid())
+  reportDate         DateTime
+  pathname           String
+  pageTitle          String
+  pageViews          Int      @default(0)
+  uniqueVisitors     Int      @default(0)
+  ctaClicks          Int      @default(0)
+  primaryCtaClicks   Int      @default(0)
+  secondaryCtaClicks Int      @default(0)
+  topReferrer        String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@unique([reportDate, pathname])
+  @@index([reportDate])
+}
+
+model ReviewInvite {
+  id                  String             @id @default(cuid())
+  customerName        String
+  customerEmail       String
+  orderReference      String?
+  trigger             ReviewTrigger
+  status              ReviewInviteStatus @default(DRAFT)
+  experienceConfirmed Boolean            @default(false)
+  wantsPublicReview   Boolean            @default(false)
+  scheduledFor        DateTime?
+  sentAt              DateTime?
+  respondedAt         DateTime?
+  publicShareReadyAt  DateTime?
+  closedAt            DateTime?
+  publicReviewUrl     String?
+  notes               String?
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+  ownerId             String?
+  owner               User?              @relation("ReviewInviteOwner", fields: [ownerId], references: [id])
+  feedback            ReviewFeedback?
+
+  @@index([status, scheduledFor])
+  @@index([trigger, createdAt])
+}
+
+model ReviewFeedback {
+  id                    String          @id @default(cuid())
+  inviteId              String          @unique
+  sentiment             ReviewSentiment
+  scenario              String
+  usefulPart            String?
+  frictionPoint         String?
+  supportFollowupNeeded Boolean         @default(false)
+  publicReviewPostedAt  DateTime?
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+  invite                ReviewInvite    @relation(fields: [inviteId], references: [id])
+}
+
+model ReviewAcquisitionReport {
+  id                     String             @id @default(cuid())
+  window                 ReviewReportWindow
+  periodStart            DateTime
+  periodEnd              DateTime
+  invitesCreated         Int                @default(0)
+  invitesSent            Int                @default(0)
+  responsesReceived      Int                @default(0)
+  publicShareReady       Int                @default(0)
+  publicReviewsCompleted Int                @default(0)
+  closedWithoutShare     Int                @default(0)
+  negativeFeedbackCount  Int                @default(0)
+  responseRate           Decimal            @default(0) @db.Decimal(5, 2)
+  sentimentBreakdown     Json?
+  triggerBreakdown       Json?
+  createdAt              DateTime           @default(now())
+  updatedAt              DateTime           @updatedAt
+
+  @@unique([window, periodStart, periodEnd])
+  @@index([window, periodStart])
+}
