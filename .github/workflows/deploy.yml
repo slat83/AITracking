@@ -113,8 +113,21 @@ jobs:
           deployed_sha="${RELEASE_ID}"
           echo "DEPLOYED_SHA=${deployed_sha}"
 
-          docker compose --env-file "${shared_env}" -f docker-compose.prod.yml up -d --build
-          curl -fsS http://127.0.0.1:3000/api/health?deep=1 >/dev/null
+          docker compose --env-file "${shared_env}" -f docker-compose.prod.yml up -d --build --remove-orphans
+
+          app_container="$(docker compose --env-file "${shared_env}" -f docker-compose.prod.yml ps -q app)"
+          for attempt in $(seq 1 30); do
+            health_status="$(docker inspect --format '{{.State.Health.Status}}' "${app_container}")"
+            if [ "${health_status}" = "healthy" ]; then
+              break
+            fi
+            if [ "${attempt}" -eq 30 ]; then
+              echo "App container did not become healthy. Last status: ${health_status}" >&2
+              docker compose --env-file "${shared_env}" -f docker-compose.prod.yml logs --tail=200 app >&2
+              exit 1
+            fi
+            sleep 2
+          done
 
           echo "DEPLOY_STATUS=success"
           EOF
