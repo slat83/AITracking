@@ -10,23 +10,22 @@ import {
 describe("AI visibility content model", () => {
   it("keeps the four priority routes in the content source", () => {
     expect(getCoreAiVisibilityPages().map((page) => page.pathname)).toEqual([
-      "/compare/best-vin-decoder",
-      "/trust/is-epicvin-legit",
-      "/compare/epicvin-vs-carfax",
-      "/pricing/cheap-vin-check",
+      "/trust",
+      "/methodology",
+      "/sample-audit",
+      "/help/faq",
     ]);
   });
 
   it("builds breadcrumbs from the same pathname source", () => {
-    expect(buildBreadcrumbs("/compare/best-vin-decoder")).toEqual([
+    expect(buildBreadcrumbs("/sample-audit")).toEqual([
       { name: "Home", href: "/" },
-      { name: "compare", href: "/compare" },
-      { name: "Best VIN Decoder Guide", href: "/compare/best-vin-decoder" },
+      { name: "Sample AI Visibility Audit", href: "/sample-audit" },
     ]);
   });
 
   it("generates faq schema from visible faq content", () => {
-    const page = aiVisibilityPages.find((item) => item.pathname === "/pricing/cheap-vin-check");
+    const page = aiVisibilityPages.find((item) => item.pathname === "/help/faq");
 
     expect(page).toBeDefined();
 
