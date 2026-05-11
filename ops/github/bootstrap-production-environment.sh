@@ -111,8 +111,8 @@ put_environment() {
 
   if [ "${CONFIGURE_BRANCH_POLICY}" = true ]; then
     api_args+=(
-      -f "deployment_branch_policy[protected_branches]=true"
-      -f "deployment_branch_policy[custom_branch_policies]=false"
+      -F "deployment_branch_policy[protected_branches]=true"
+      -F "deployment_branch_policy[custom_branch_policies]=false"
     )
   fi
 
