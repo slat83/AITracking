@@ -74,6 +74,43 @@ async function readJson<T>(response: Response): Promise<T> {
   return payload as T;
 }
 
+type DashboardLoadResult = {
+  snapshot: DashboardSnapshot;
+  error: string | null;
+};
+
+type DashboardLoadSections = {
+  keywords: PromiseSettledResult<{ keywords: DashboardKeywordRecord[] }>;
+  threads: PromiseSettledResult<{ threads: DashboardThreadRecord[] }>;
+  posts: PromiseSettledResult<{ postsToAnswer: DashboardPostRecord[]; answeredPosts: DashboardPostRecord[] }>;
+};
+
+export function buildDashboardLoadResult(results: DashboardLoadSections): DashboardLoadResult {
+  const errors: string[] = [];
+
+  if (results.keywords.status === "rejected") {
+    errors.push(`Keywords: ${results.keywords.reason instanceof Error ? results.keywords.reason.message : "Failed to load."}`);
+  }
+
+  if (results.threads.status === "rejected") {
+    errors.push(`Threads: ${results.threads.reason instanceof Error ? results.threads.reason.message : "Failed to load."}`);
+  }
+
+  if (results.posts.status === "rejected") {
+    errors.push(`Posts: ${results.posts.reason instanceof Error ? results.posts.reason.message : "Failed to load."}`);
+  }
+
+  return {
+    snapshot: {
+      keywords: results.keywords.status === "fulfilled" ? results.keywords.value.keywords : [],
+      threads: results.threads.status === "fulfilled" ? results.threads.value.threads : [],
+      postsToAnswer: results.posts.status === "fulfilled" ? results.posts.value.postsToAnswer : [],
+      answeredPosts: results.posts.status === "fulfilled" ? results.posts.value.answeredPosts : [],
+    },
+    error: errors.length > 0 ? errors.join(" ") : null,
+  };
+}
+
 export function DashboardWorkbench() {
   const [dashboard, setDashboard] = useState<DashboardSnapshot>(EMPTY_DASHBOARD);
   const [keywordInput, setKeywordInput] = useState("");
@@ -90,28 +127,26 @@ export function DashboardWorkbench() {
         setLoading(true);
         setError(null);
 
-        const [keywordsResponse, threadsResponse, postsResponse] = await Promise.all([
-          fetch("/api/keywords", { cache: "no-store" }),
-          fetch("/api/threads", { cache: "no-store" }),
-          fetch("/api/posts", { cache: "no-store" }),
-        ]);
-
-        const [keywordsPayload, threadsPayload, postsPayload] = await Promise.all([
-          readJson<{ keywords: DashboardKeywordRecord[] }>(keywordsResponse),
-          readJson<{ threads: DashboardThreadRecord[] }>(threadsResponse),
-          readJson<{ postsToAnswer: DashboardPostRecord[]; answeredPosts: DashboardPostRecord[] }>(postsResponse),
+        const [keywordsResult, threadsResult, postsResult] = await Promise.allSettled([
+          (async () => readJson<{ keywords: DashboardKeywordRecord[] }>(await fetch("/api/keywords", { cache: "no-store" })))(),
+          (async () => readJson<{ threads: DashboardThreadRecord[] }>(await fetch("/api/threads", { cache: "no-store" })))(),
+          (async () => readJson<{ postsToAnswer: DashboardPostRecord[]; answeredPosts: DashboardPostRecord[] }>(
+            await fetch("/api/posts", { cache: "no-store" }),
+          ))(),
         ]);
 
         if (!active) {
           return;
         }
 
-        setDashboard({
-          keywords: keywordsPayload.keywords,
-          threads: threadsPayload.threads,
-          postsToAnswer: postsPayload.postsToAnswer,
-          answeredPosts: postsPayload.answeredPosts,
+        const { snapshot, error: loadError } = buildDashboardLoadResult({
+          keywords: keywordsResult,
+          threads: threadsResult,
+          posts: postsResult,
         });
+
+        setDashboard(snapshot);
+        setError(loadError);
       } catch (loadError) {
         if (!active) {
           return;

@@ -389,6 +389,11 @@ select {
   background: rgba(255, 253, 248, 0.92);
 }
 
+.workflowOpportunityCardActive {
+  border-color: rgba(178, 76, 43, 0.44);
+  box-shadow: 0 0 0 3px rgba(178, 76, 43, 0.12);
+}
+
 .workflowOpportunityHeader {
   display: flex;
   justify-content: space-between;
@@ -495,10 +500,27 @@ select {
   padding: 12px;
 }
 
+.workspaceSecondaryNav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+}
+
 .workspaceNavLink {
   padding: 10px 14px;
   border-radius: 999px;
   color: var(--muted);
+  border: 1px solid transparent;
+  transition: border-color 160ms ease, background 160ms ease, color 160ms ease;
+}
+
+.workspaceSecondaryNavLink {
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  background: rgba(255, 253, 248, 0.72);
 }
 
 .workspaceNavLinkDisabled {
@@ -510,6 +532,12 @@ select {
   background: var(--surface-strong);
   color: var(--text);
   border: 1px solid var(--line);
+}
+
+.workspaceSecondaryNavLinkActive {
+  color: var(--text);
+  border-color: rgba(178, 76, 43, 0.32);
+  box-shadow: 0 12px 30px rgba(178, 76, 43, 0.08);
 }
 
 .workspaceStats {
@@ -568,6 +596,21 @@ select {
 .workspaceTimeline {
   display: grid;
   gap: 12px;
+}
+
+.workspaceQueueControls {
+  display: grid;
+  gap: 14px;
+}
+
+.workspaceControlGrid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.workspaceQueueControlsActions {
+  margin-top: -2px;
 }
 
 .workspaceViewLink,
@@ -673,6 +716,18 @@ select {
   gap: 24px;
 }
 
+.workspaceQueuePanel {
+  order: 1;
+}
+
+.workspaceDetailPanel {
+  order: 2;
+}
+
+.workspaceRailPanel {
+  order: 3;
+}
+
 .workspaceSection {
   display: grid;
   gap: 18px;
@@ -743,6 +798,51 @@ select {
 .workspaceRailSection {
   display: grid;
   gap: 14px;
+}
+
+.workspaceDecisionCard {
+  gap: 8px;
+}
+
+.workspaceDecisionMeta {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.workspaceInlineLink {
+  color: var(--accent);
+}
+
+.workspaceMutationForm {
+  display: grid;
+  gap: 14px;
+  margin-top: 8px;
+}
+
+.workspaceMutationActions {
+  margin-top: 0;
+}
+
+.workflowInlineError,
+.workflowInlineNotice {
+  margin: 4px 0 0;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid transparent;
+}
+
+.workflowInlineError {
+  color: #7a2f15;
+  background: rgba(255, 238, 233, 0.9);
+  border-color: rgba(178, 76, 43, 0.24);
+}
+
+.workflowInlineNotice {
+  color: #0f766e;
+  background: rgba(235, 255, 250, 0.88);
+  border-color: rgba(15, 118, 110, 0.18);
 }
 
 .workspaceListRow {
@@ -816,6 +916,7 @@ select {
 
   .workflowScenarioGrid,
   .workspaceQuestionGrid,
+  .workspaceControlGrid,
   .workspaceFactsGrid,
   .workspaceSummaryGrid,
   .workspaceContextGrid,
@@ -855,6 +956,54 @@ select {
   font-size: 0.88rem;
 }
 
+.globalLanguageSwitcher {
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  z-index: 1000;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: rgba(255, 253, 248, 0.92);
+}
+
+.globalLanguageSwitcherLabel {
+  color: var(--muted);
+  font-size: 0.82rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.globalLanguageSwitcherButtons {
+  display: inline-flex;
+  gap: 6px;
+  padding: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid var(--line);
+}
+
+.globalLanguageSwitcherButton {
+  min-width: 44px;
+  min-height: 34px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: background 160ms ease, color 160ms ease, transform 160ms ease;
+}
+
+.globalLanguageSwitcherButton:hover {
+  transform: translateY(-1px);
+}
+
+.globalLanguageSwitcherButtonActive {
+  background: var(--accent);
+  color: white;
+}
+
 ul.clean {
   list-style: none;
   padding: 0;
@@ -892,5 +1041,24 @@ li.row {
 
   .workspaceGrid {
     grid-template-columns: 1fr;
+  }
+
+  .globalLanguageSwitcher {
+    top: 14px;
+    right: 14px;
+    gap: 10px;
+    padding: 9px 10px;
+  }
+
+  .globalLanguageSwitcherLabel {
+    font-size: 0.78rem;
+  }
+
+  .workspaceRailPanel {
+    order: 2;
+  }
+
+  .workspaceDetailPanel {
+    order: 3;
   }
 }

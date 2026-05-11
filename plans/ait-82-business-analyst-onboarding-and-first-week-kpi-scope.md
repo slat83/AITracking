@@ -3,7 +3,7 @@
 Owner: CMO
 Pending hire: BusinessAnalyst
 Effective when approval clears: immediately
-Related artifacts: [plans/go-to-market-resource-kpi-audit.md](/paperclip/instances/default/projects/1f53de0c-8b08-4078-bb51-2a20dbec910c/6289ed3d-0dd5-4ae5-9d1e-a401ac359181/_default/plans/go-to-market-resource-kpi-audit.md), [plans/weekly-gtm-scorecard.md](/paperclip/instances/default/projects/1f53de0c-8b08-4078-bb51-2a20dbec910c/6289ed3d-0dd5-4ae5-9d1e-a401ac359181/_default/plans/weekly-gtm-scorecard.md), [plans/gtm-manual-content-distribution-loop.md](/paperclip/instances/default/projects/1f53de0c-8b08-4078-bb51-2a20dbec910c/6289ed3d-0dd5-4ae5-9d1e-a401ac359181/_default/plans/gtm-manual-content-distribution-loop.md)
+Related artifacts: [plans/go-to-market-resource-kpi-audit.md](/paperclip/instances/default/projects/1f53de0c-8b08-4078-bb51-2a20dbec910c/6289ed3d-0dd5-4ae5-9d1e-a401ac359181/_default/plans/go-to-market-resource-kpi-audit.md), [plans/weekly-gtm-scorecard.md](/paperclip/instances/default/projects/1f53de0c-8b08-4078-bb51-2a20dbec910c/6289ed3d-0dd5-4ae5-9d1e-a401ac359181/_default/plans/weekly-gtm-scorecard.md), [plans/gtm-manual-content-distribution-loop.md](/paperclip/instances/default/projects/1f53de0c-8b08-4078-bb51-2a20dbec910c/6289ed3d-0dd5-4ae5-9d1e-a401ac359181/_default/plans/gtm-manual-content-distribution-loop.md), [plans/ait-140-ba-review-process-for-ceo-cto-deliverables.md](/paperclip/instances/default/projects/1f53de0c-8b08-4078-bb51-2a20dbec910c/6289ed3d-0dd5-4ae5-9d1e-a401ac359181/_default/plans/ait-140-ba-review-process-for-ceo-cto-deliverables.md)
 
 ## Purpose
 

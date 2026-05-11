@@ -20,6 +20,11 @@ Working assumption:
 - the earlier `CEO LinkedIn` label in the weekly tracker is the same channel the issue describes as the founder account
 - the founder post should be published by the CEO only if that account is the approved founder voice for EpicVIN this week
 
+CMO decision:
+
+- treat `CEO LinkedIn` and `Founder LinkedIn account (CEO-owned)` as the same approved week-one distribution channel in all related records
+- use `Founder LinkedIn account (CEO-owned)` as the canonical label in plans and issue comments when clarifying ownership
+
 ## Target Framing
 
 ### Founder LinkedIn account (CEO-owned)
@@ -28,7 +33,7 @@ Use when the approved brief is ready and the team wants a founder-voice take on 
 
 Message angle:
 
-- frame the post as a practical buying note for used-car shoppers comparing a known premium default with a lower-cost alternative
+- frame the post as a practical buying note for used-car shoppers comparing a familiar default with a lower-cost alternative
 - emphasize when a buyer should compare tools instead of assuming one service is always the best fit
 - keep the voice operator-level and transparent rather than promotional
 
@@ -87,11 +92,11 @@ Default disclosure:
 
 Default disclosure:
 
-`I lead GTM/content work tied to EpicVIN. We published a comparison brief explaining how we think buyers should evaluate EpicVIN vs Carfax, with methodology notes and limitations included.`
+`I lead GTM/content for EpicVIN, so this is a company perspective. We published a comparison brief explaining how we think buyers should evaluate EpicVIN vs Carfax, with methodology notes and limitations included.`
 
 ## Draft Post Copy
 
-These drafts are pre-approval working copy only. Final wording should be aligned to the approved fact set in [AIT-109](/AIT/issues/AIT-109) before publishing.
+These drafts were prepared before approval. Final wording should stay aligned to the approved fact set and CEO guardrails recorded in [AIT-109](/AIT/issues/AIT-109) before publishing.
 
 ### Founder LinkedIn account (CEO-owned)
 
@@ -103,7 +108,7 @@ Draft:
 
 Draft:
 
-`I lead GTM/content work tied to EpicVIN. We documented the criteria we think buyers should use when comparing EpicVIN and Carfax, including methodology notes and fairness limitations. The goal is not to declare a universal winner but to make the choice easier for people with different budgets and use cases.`
+`I lead GTM/content for EpicVIN, so this is a company perspective. We documented the criteria we think buyers should use when comparing EpicVIN and Carfax, including methodology notes and fairness limitations. The goal is not to declare a universal winner but to make the choice easier for people with different budgets and use cases.`
 
 ## Compliance And Claim Guardrails
 
@@ -118,8 +123,14 @@ Draft:
 ### Known gaps
 
 1. The approved founder distribution channel is named inconsistently as `CEO LinkedIn` in the tracker and `founder` in the prep issue.
-2. The final approved asset URL does not exist yet because [AIT-109](/AIT/issues/AIT-109) is still in `drafting`.
+2. The final approved asset URL is still missing from the workspace and issue thread even though [AIT-109](/AIT/issues/AIT-109) is approved.
 3. No explicit confirmation is recorded yet that the CEO-owned founder account and the CMO account are both available for posting by the 2026-05-15 due date.
+
+Approval-state update:
+
+- [AIT-109](/AIT/issues/AIT-109) is now approved as the internal comparison brief.
+- CEO guardrails now explicitly forbid `premium` shorthand in public copy unless a current, visible pricing reference supports it.
+- The remaining gap is no longer approval. It is the final public asset URL plus confirmation of who will execute live posting.
 
 ## Pre-Approval Confirmation Checklist
 
@@ -152,8 +163,21 @@ Draft:
 ### Required unblock steps
 
 1. CMO confirms whether `CEO LinkedIn` should be treated as `Founder LinkedIn account (CEO-owned)` everywhere in week-one execution records.
-2. [AIT-109](/AIT/issues/AIT-109) moves to an approved, linkable asset.
+2. The final public asset URL is published and available to insert into the prepared post copy.
 3. Posting owners confirm account access and willingness to publish once the asset is approved.
+
+## CMO Review Outcome
+
+Recorded: 2026-05-11
+
+1. `CEO LinkedIn` and `Founder LinkedIn account (CEO-owned)` should be treated as the same week-one channel everywhere. Use the founder label when we need to make ownership explicit.
+2. The founder and CMO draft copy is directionally approved for week one. Final live copy must still stay inside the exact approved fact set and public URL from [AIT-109](/AIT/issues/AIT-109).
+3. Stronger disclosure is not required beyond explicit first-sentence company-role disclosure. For week one, both posts should open with a direct EpicVIN role statement and should not present as neutral third-party commentary.
+
+Remaining blocker after CMO review:
+
+- CEO/founder-account owner still needs to confirm posting willingness and account readiness
+- the final public asset URL still needs to be available for insertion into the prepared copy
 
 ## Ready-When Conditions
 
@@ -162,4 +186,4 @@ This prep lane can be considered complete once:
 1. the target names above are accepted
 2. the disclosure copy and draft post copy are accepted
 3. the account-readiness checklist is answered by the relevant owners
-4. the final asset from [AIT-109](/AIT/issues/AIT-109) is approved and linked into the downstream distribution issues
+4. the final public asset URL is linked into the downstream distribution issues
