@@ -72,6 +72,7 @@ export async function saveFounderOnboardingAction(formData: FormData) {
         topCompetitors: parsed.data.topCompetitors,
         businessQuestion: parsed.data.businessQuestion,
         supportingContext: parsed.data.supportingContext ?? null,
+        onboardingStartedAt: membership.pilot.onboardingStartedAt ?? new Date(),
         onboardingCompletedAt: new Date(),
         status:
           membership.pilot.status === PilotStatus.INVITE_SENT
