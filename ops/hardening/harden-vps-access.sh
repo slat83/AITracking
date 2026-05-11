@@ -55,7 +55,7 @@ install -d -m 700 -o "$ADMIN_USER" -g "$ADMIN_USER" "/home/$ADMIN_USER/.ssh"
 install -m 600 -o "$ADMIN_USER" -g "$ADMIN_USER" "$ADMIN_SSH_KEYS_FILE" "/home/$ADMIN_USER/.ssh/authorized_keys"
 
 SSHD_CONFIG_DIR="/etc/ssh/sshd_config.d"
-SSHD_OVERRIDE="$SSHD_CONFIG_DIR/10-content-ops-hardening.conf"
+SSHD_OVERRIDE="$SSHD_CONFIG_DIR/10-flowvory-hardening.conf"
 
 install -d -m 755 "$SSHD_CONFIG_DIR"
 cat >"$SSHD_OVERRIDE" <<EOF
@@ -76,7 +76,7 @@ fi
 sshd -t
 
 if [ "$ENABLE_FAIL2BAN" = "true" ] && command -v systemctl >/dev/null 2>&1; then
-  cat > /etc/fail2ban/jail.d/content-ops-sshd.local <<EOF
+  cat > /etc/fail2ban/jail.d/flowvory-sshd.local <<EOF
 [sshd]
 enabled = true
 port = $SSH_PORT

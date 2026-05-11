@@ -6,9 +6,9 @@ Wants=network-online.target
 
 [Service]
 Type=oneshot
-WorkingDirectory=/opt/flowvory
-ExecStart=/usr/bin/docker compose --env-file .env.production -f docker-compose.prod.yml up -d --build
-ExecStop=/usr/bin/docker compose --env-file .env.production -f docker-compose.prod.yml down
+WorkingDirectory=/opt/flowvory/current
+ExecStart=/usr/bin/docker compose --env-file /opt/flowvory/shared/.env.production -f /opt/flowvory/current/docker-compose.prod.yml up -d --build
+ExecStop=/usr/bin/docker compose --env-file /opt/flowvory/shared/.env.production -f /opt/flowvory/current/docker-compose.prod.yml down
 RemainAfterExit=yes
 TimeoutStartSec=0
 

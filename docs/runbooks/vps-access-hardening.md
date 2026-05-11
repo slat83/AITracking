@@ -21,7 +21,7 @@ Run this once from a trusted root session on a Debian or Ubuntu VPS:
 ```bash
 cp ~/.ssh/authorized_keys ./private/admin-authorized_keys
 sudo env \
-  ADMIN_USER=contentops \
+  ADMIN_USER=flowvory \
   ADMIN_SSH_KEYS_FILE=./private/admin-authorized_keys \
   SSH_ALLOW_CIDR=203.0.113.0/24 \
   sh ./ops/hardening/harden-vps-access.sh

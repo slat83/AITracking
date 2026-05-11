@@ -1,6 +1,8 @@
-# Content Ops Foundation
+# Flowvory App
 
-This repository now contains the initial application foundation for the content opportunity, drafting, and distribution workflow system described in the planning docs.
+This repository contains the canonical Next.js application for Flowvory. It includes the operator workflow CRM foundation described in the planning docs: opportunity intake, drafting, review, and approved distribution across reputation and demand scenarios.
+
+Documentation and secret-handling rules live in [docs/security/storage-and-worker-policy.md](./docs/security/storage-and-worker-policy.md). Read that policy before adding new runbooks, operator notes, or environment files.
 
 ## Stack
 
@@ -9,6 +11,7 @@ This repository now contains the initial application foundation for the content 
 - Credentials-based auth with role-aware route protection
 - Database-backed background job seam
 - Docker Compose for local database
+- GitHub Actions for CI
 - GitHub Actions for CI
 
 ## Quick start
@@ -24,7 +27,7 @@ docker compose up -d
 
 ```bash
 npm install
-npx prisma db push
+npx prisma migrate dev
 npm run db:seed
 ```
 
@@ -40,25 +43,62 @@ npm run jobs:run
 npm run dev
 ```
 
-6. Visit `/sign-in` and use the seeded admin credentials from `.env`.
+6. Visit `/sign-in` and use the local seeded admin credentials from your untracked `.env`.
 
 Set `NEXT_PUBLIC_SITE_URL` to the canonical public origin when testing metadata, `robots.txt`, and `sitemap.xml`.
 
-## Vercel deployment
+## Deployment policy
 
-This app is compatible with Vercel's Node.js runtime. Before the first deployment:
+The supported production deployment target is a private VPS that we control. Vercel is no longer an approved runtime for this repository, and this app is the only approved production surface.
 
-1. Add `DATABASE_URL` in the Vercel project environment settings.
-2. Add `AUTH_SECRET` and keep `AUTH_TRUST_HOST=true`.
-3. Add `CRON_SECRET` with a random value of at least 16 characters.
-4. Set `NEXT_PUBLIC_SITE_URL` to the deployed canonical origin.
-5. Run `npx prisma db push` against the target database before expecting auth, dashboard, jobs, or analytics routes to work.
+Use these documents as the source of truth:
 
-The repo includes a Hobby-compatible Vercel cron in [vercel.json](./vercel.json) that calls `/api/cron/daily` once per day at `05:00 UTC`. That endpoint is secured with `CRON_SECRET`, aggregates the previous UTC day's AI visibility events, and drains any due database jobs.
+- [docs/runbooks/github-deploy-process.md](./docs/runbooks/github-deploy-process.md) for branch rules, commit verification, pull request expectations, and the approved GitHub-to-VPS release flow
+- [docs/runbooks/vps-deployment.md](./docs/runbooks/vps-deployment.md) for first deploys, routine deploys, rollback, backups, and restore
+- [docs/runbooks/vps-access-hardening.md](./docs/runbooks/vps-access-hardening.md) for the approved SSH access path and exposed-root-credential response flow
+- [docs/runbooks/vps-operations.md](./docs/runbooks/vps-operations.md) for operating rules, ownership, daily and weekly routines, and change control
+- [docs/adr/0002-private-vps-deployment.md](./docs/adr/0002-private-vps-deployment.md) for the architectural decision behind the policy
+- [docs/security/storage-and-worker-policy.md](./docs/security/storage-and-worker-policy.md) for documentation placement, private-note handling, and secrets rules
 
-Vercel Hobby cron jobs are limited to once per day and can arrive any time within the scheduled hour. The reporting pipeline is intentionally idempotent to tolerate that behavior.
+For GitHub-side deploy bootstrap, use `ops/github/bootstrap-production-environment.sh` together with `ops/github/production-secrets.env.example` and the deploy-process runbook. Populate the real secrets only in an ignored local file under `private/`.
 
-The database-backed routes in `/app`, `/api/auth`, `/api/analytics/visibility`, and `/api/cron/daily` are pinned to the Node.js runtime and should not be moved to Edge without revisiting the Prisma and auth setup.
+The database-backed routes in `/app`, `/api/auth`, `/api/analytics/visibility`, and `/api/cron/daily` are pinned to the Node.js runtime and should not be moved to Edge-style runtimes without revisiting the Prisma and auth setup.
+
+## VPS deployment
+
+The repo now includes a single-VPS Docker Compose deployment path with:
+
+- `docker-compose.prod.yml` for the app and PostgreSQL
+- `.env.production.example` for production configuration
+- Prisma migrations in `prisma/migrations`
+- `scripts/start-production.sh` to run `prisma migrate deploy` before boot
+- backup, restore, and cron helper scripts in `scripts/`
+- immutable release directories on the VPS at `shared/`, `releases/`, and `current`
+- an operator runbook at `docs/runbooks/vps-deployment.md`
+
+For a first deploy on a VPS:
+
+```bash
+install -d /opt/flowvory/shared
+cp .env.production.example /opt/flowvory/shared/.env.production
+```
+
+Then bootstrap the GitHub `production` environment and run the `Deploy VPS` GitHub Actions workflow so the server receives a new immutable release under `/opt/flowvory/releases/<git-sha>` and repoints `/opt/flowvory/current`.
+
+Set `NEXTAUTH_SECRET` to the same value as `AUTH_SECRET`, set `NEXTAUTH_URL` to the same canonical origin as `NEXT_PUBLIC_SITE_URL`, and set `LETSENCRYPT_EMAIL` plus `APP_HOST` before the first boot so Traefik can provision a trusted certificate. `APP_HOST` should be on a domain we control rather than a provider-managed fallback hostname.
+
+## Deferred after convergence
+
+This runtime convergence intentionally does not rewrite every legacy public surface yet.
+The following remain deferred to follow-on product-positioning issues:
+
+- legacy public marketing and comparison routes still seeded around the earlier thesis
+- existing seed data and reporting examples that are still branded around prior scenarios
+- broader Flowvory messaging, information architecture, and onboarding copy updates
+
+Those items should not reopen production runtime ownership. The canonical production answer is still this Next.js app on the private VPS path above.
+
+Use the runbook for the rest of the operating flow, including cron wiring, backups, restore, and rollback.
 
 ## Core directories
 

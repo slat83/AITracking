@@ -42,7 +42,8 @@ p {
 
 button,
 input,
-textarea {
+textarea,
+select {
   font: inherit;
 }
 
@@ -292,12 +293,46 @@ textarea {
 }
 
 .field input,
-.field textarea {
+.field textarea,
+.workflowSelect {
   width: 100%;
   border: 1px solid var(--line);
   border-radius: 12px;
   padding: 12px 14px;
   background: rgba(255, 255, 255, 0.88);
+}
+
+.field input:focus,
+.field textarea:focus,
+.workflowSelect:focus,
+.passwordToggle:focus {
+  outline: 2px solid rgba(178, 76, 43, 0.22);
+  outline-offset: 2px;
+}
+
+.field textarea {
+  resize: vertical;
+}
+
+.passwordField {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.passwordToggle {
+  min-width: 72px;
+  min-height: 46px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--surface-strong);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.signInHint {
+  margin-bottom: 8px;
 }
 
 .topbar {
@@ -317,6 +352,492 @@ textarea {
 
 .dashboardHeader {
   padding: 20px 0 28px;
+}
+
+.workflowPage {
+  padding-bottom: 80px;
+}
+
+.workflowSection {
+  display: grid;
+  gap: 18px;
+}
+
+.workflowSectionHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: start;
+}
+
+.workflowFormGrid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.workflowFieldSpan2 {
+  grid-column: span 2;
+}
+
+.workflowOpportunityCard {
+  display: grid;
+  gap: 18px;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: rgba(255, 253, 248, 0.92);
+}
+
+.workflowOpportunityHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: start;
+}
+
+.workflowPillRow {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.workflowScenarioSummary {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid rgba(178, 76, 43, 0.18);
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(255, 247, 238, 0.92), rgba(255, 252, 247, 0.92));
+}
+
+.workflowScenarioSummaryHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: start;
+}
+
+.workflowScenarioMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.workflowScenarioGrid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.workflowScenarioCard {
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.workflowScenarioCard .metaValue {
+  margin: 6px 0 0;
+}
+
+.workflowScenarioBlocker {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(255, 238, 233, 0.88);
+  color: #7a2f15;
+}
+
+.workflowMessage {
+  margin-bottom: 20px;
+}
+
+.workflowMessageError {
+  border-color: rgba(178, 76, 43, 0.32);
+  background: rgba(255, 238, 233, 0.9);
+}
+
+.workflowMessageNotice {
+  border-color: rgba(15, 118, 110, 0.24);
+  background: rgba(235, 255, 250, 0.88);
+}
+
+.workspacePage {
+  padding-bottom: 80px;
+}
+
+.workspaceHeader {
+  display: grid;
+  gap: 18px;
+}
+
+.workspaceHeaderInner {
+  align-items: end;
+}
+
+.workspaceIntro {
+  margin-top: 10px;
+  max-width: 760px;
+}
+
+.workspaceHeaderActions {
+  display: grid;
+  gap: 12px;
+  justify-items: end;
+}
+
+.workspaceNav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 12px;
+}
+
+.workspaceNavLink {
+  padding: 10px 14px;
+  border-radius: 999px;
+  color: var(--muted);
+}
+
+.workspaceNavLinkDisabled {
+  opacity: 0.72;
+  cursor: default;
+}
+
+.workspaceNavLinkActive {
+  background: var(--surface-strong);
+  color: var(--text);
+  border: 1px solid var(--line);
+}
+
+.workspaceStats {
+  align-items: stretch;
+}
+
+.workspaceQuestionGrid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-bottom: 20px;
+}
+
+.workspaceQuestionCard,
+.shellSection {
+  padding: 24px;
+  border-radius: 18px;
+  border: 1px solid var(--line);
+  background: rgba(255, 253, 248, 0.94);
+  box-shadow: var(--shadow);
+}
+
+.workspaceStatLabel {
+  margin: 10px 0 0;
+  font-size: 1.3rem;
+}
+
+.workspaceGrid {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: minmax(260px, 0.95fr) minmax(0, 1.7fr) minmax(280px, 1fr);
+  align-items: start;
+}
+
+.workspacePanel {
+  padding: 22px;
+}
+
+.workspaceQueuePanel,
+.workspaceRail {
+  display: grid;
+  gap: 18px;
+}
+
+.workspacePanelHeader h2,
+.workspaceSection h3,
+.workspaceLaneCard h4,
+.workspaceRailSection h2 {
+  margin: 0;
+}
+
+.workspaceViewList,
+.workspaceQueueList,
+.workspaceChecklist,
+.workspaceList,
+.workspaceTimeline {
+  display: grid;
+  gap: 12px;
+}
+
+.workspaceViewLink,
+.workspaceQueueCard,
+.workspaceInlineCard,
+.workspaceLaneCard,
+.workspaceRailCard,
+.workspaceChecklistItem,
+.workspaceOutcomeCard,
+.workspaceActionCard {
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: rgba(255, 253, 248, 0.94);
+}
+
+.workspaceViewLink {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+}
+
+.workspaceViewLinkActive,
+.workspaceQueueCardActive {
+  border-color: rgba(178, 76, 43, 0.32);
+  box-shadow: 0 12px 30px rgba(178, 76, 43, 0.1);
+}
+
+.workspaceCountPill {
+  min-width: 32px;
+  justify-content: center;
+}
+
+.workspaceQueueCard {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+}
+
+.workspaceQueueCardHeader,
+.workspaceQueueMeta,
+.workspaceChecklistHeader,
+.workspaceActionMeta,
+.workspaceSectionTitleRow,
+.workspaceScenarioHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: start;
+}
+
+.workspaceQueueMeta,
+.workspaceActionMeta,
+.workspaceChecklistMeta,
+.workspaceTimestamp {
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.workspaceQueueAction {
+  line-height: 1.5;
+}
+
+.workspaceBadgeRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.workspaceToneBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+
+.workspaceToneBadgesuccess {
+  color: #0f766e;
+  background: rgba(15, 118, 110, 0.14);
+}
+
+.workspaceToneBadgewarning {
+  color: #9a5a00;
+  background: rgba(244, 197, 66, 0.2);
+}
+
+.workspaceToneBadgedanger {
+  color: #b24c2b;
+  background: rgba(178, 76, 43, 0.14);
+}
+
+.workspaceToneBadgeneutral {
+  color: #52606d;
+  background: rgba(82, 96, 109, 0.12);
+}
+
+.workspaceDetailPanel {
+  display: grid;
+  gap: 24px;
+}
+
+.workspaceSection {
+  display: grid;
+  gap: 18px;
+}
+
+.workspaceFactsGrid,
+.workspaceSummaryGrid,
+.workspaceContextGrid,
+.workspaceLaneGrid,
+.workspaceOutcomeGrid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.workspaceFactCard,
+.workspaceInlineCard,
+.workspaceLaneCard,
+.workspaceOutcomeCard,
+.workspaceActionCard,
+.workspaceRailCard,
+.workspaceChecklistItem {
+  padding: 18px;
+}
+
+.workspaceInlineCard {
+  display: grid;
+  gap: 10px;
+}
+
+.workspaceInlineCardSpan2,
+.workspaceArtifactsCard {
+  grid-column: span 2;
+}
+
+.workspaceTimeline {
+  position: relative;
+  padding-left: 10px;
+}
+
+.workspaceTimelineItem {
+  display: grid;
+  grid-template-columns: 14px minmax(0, 1fr);
+  gap: 14px;
+}
+
+.workspaceTimelineDot {
+  width: 10px;
+  height: 10px;
+  margin-top: 7px;
+  border-radius: 999px;
+  background: var(--accent);
+  box-shadow: 0 0 0 4px rgba(178, 76, 43, 0.12);
+}
+
+.workspaceScenarioHeader h2 {
+  margin: 10px 0 0;
+}
+
+.workspaceHeaderPills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.workspaceLaneCard,
+.workspaceRailSection {
+  display: grid;
+  gap: 14px;
+}
+
+.workspaceListRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: start;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.workspaceListRow:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.workspaceEmptyState {
+  display: grid;
+  gap: 10px;
+  padding: 8px 0;
+}
+
+.shellSection {
+  display: grid;
+  gap: 18px;
+}
+
+.shellSectionHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: start;
+}
+
+.shellGrid {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.shellSectionSpan2 {
+  grid-column: span 2;
+}
+
+.workspaceDetailEmpty {
+  min-height: 420px;
+  place-content: center;
+}
+
+@media (max-width: 720px) {
+  .workflowFieldSpan2 {
+    grid-column: span 1;
+  }
+
+  .workflowOpportunityHeader,
+  .workflowSectionHeader,
+  .workflowScenarioSummaryHeader,
+  .topbarInner,
+  .workspaceQueueCardHeader,
+  .workspaceQueueMeta,
+  .workspaceChecklistHeader,
+  .workspaceActionMeta,
+  .workspaceSectionTitleRow,
+  .workspaceScenarioHeader {
+    flex-direction: column;
+  }
+
+  .workflowPillRow {
+    justify-content: flex-start;
+  }
+
+  .workflowScenarioGrid,
+  .workspaceQuestionGrid,
+  .workspaceFactsGrid,
+  .workspaceSummaryGrid,
+  .workspaceContextGrid,
+  .workspaceLaneGrid,
+  .workspaceOutcomeGrid,
+  .shellGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .workspaceInlineCardSpan2,
+  .workspaceArtifactsCard,
+  .shellSectionSpan2 {
+    grid-column: span 1;
+  }
+
+  .workspaceHeaderActions {
+    justify-items: start;
+  }
+
+  .workspaceHeaderPills {
+    justify-content: flex-start;
+  }
 }
 
 .dashboardGrid {
@@ -366,6 +887,10 @@ li.row {
   }
 
   .dashboardGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .workspaceGrid {
     grid-template-columns: 1fr;
   }
 }

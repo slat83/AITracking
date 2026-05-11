@@ -2,6 +2,7 @@ import bcrypt from "bcryptjs";
 import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 
+import { normalizeEmail } from "@/server/auth/credentials";
 import { prisma } from "@/server/db/client";
 
 export const authOptions: NextAuthOptions = {
@@ -19,12 +20,19 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials.password) {
+        const email = credentials?.email ? normalizeEmail(credentials.email) : "";
+
+        if (!email || !credentials?.password) {
           return null;
         }
 
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email.toLowerCase() },
+        const user = await prisma.user.findFirst({
+          where: {
+            email: {
+              equals: email,
+              mode: "insensitive",
+            },
+          },
         });
 
         if (!user) {

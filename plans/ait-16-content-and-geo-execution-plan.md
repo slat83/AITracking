@@ -4,6 +4,8 @@
 
 This plan converts [AIT-11](/issues/AIT-11) into an execution-ready content and GEO program for EpicVIN.
 
+This is a launch-vertical execution plan for the broader workflow CRM defined in [AIT-36](/issues/AIT-36). EpicVIN is the current scenario pack and proof-of-concept environment, not the permanent product boundary.
+
 It focuses on the four priority demand scenarios:
 
 - best VIN decoder
@@ -34,6 +36,16 @@ This plan must not rely on:
 - disguised promotion
 - undisclosed forum or Q&A seeding
 - unsupported superiority claims
+
+The reusable product layer stays constant across verticals:
+
+- detect a meaningful demand or trust signal
+- organize the scenario into a working queue
+- prepare an evidence-backed draft or response
+- coordinate approved execution through real people and accounts
+- learn from the outcome and fold it back into the next action
+
+The EpicVIN scenarios below are one launch-specific application of that workflow.
 
 ## Content Program Structure
 
@@ -451,6 +463,7 @@ Increase real review volume and freshness without biasing sentiment or filtering
 
 ### Weekly operating KPIs
 
+- workflow intake coverage across the active launch scenario pack
 - qualified content opportunities added
 - opportunities triaged within 2 business days
 - drafts moved to ready-for-review
@@ -462,6 +475,7 @@ Increase real review volume and freshness without biasing sentiment or filtering
 
 ### Monthly outcome KPIs
 
+- reusable workflow health: intake volume, draft movement, distribution completion, and evidence gaps by scenario
 - non-branded visibility for the four target scenarios
 - branded risk-query trend for legitimacy terms
 - AI mention rate across the priority prompt set
@@ -556,6 +570,6 @@ Month:
 
 ## Final Position
 
-EpicVIN should not try to manufacture "AI reputation." It should create a consistent set of factual pages, proof assets, reviews, and disclosed mentions that make the correct answer easier for AI systems and users to retrieve.
+EpicVIN should not try to manufacture "AI reputation." The workflow CRM should help a team coordinate factual pages, proof assets, disclosed participation, and reviewable follow-up so accurate answers become easier for users and AI systems to retrieve.
 
-That is the durable path for all four target intents.
+EpicVIN is the first launch pack for that workflow, and those four target intents are the current proof-of-concept set.

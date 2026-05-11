@@ -29,14 +29,14 @@ export function AiVisibilityPageTemplate({ page }: { page: AiVisibilityPage }) {
       <div className="shell">
         <header className="siteHeader">
           <Link className="siteBrand" href="/">
-            Content Ops Visibility
+            Flowvory
           </Link>
           <nav className="siteNav" aria-label="Primary">
-            <Link href={"/compare/best-vin-decoder" as Route}>Compare</Link>
+            <Link href={"/sample-audit" as Route}>Sample audit</Link>
+            <Link href={"/methodology" as Route}>Method</Link>
             <Link href={"/trust" as Route}>Trust</Link>
-            <Link href={"/pricing/cheap-vin-check" as Route}>Pricing</Link>
             <Link href={"/help/faq" as Route}>FAQ</Link>
-            <Link href="/app">Operator app</Link>
+            <Link href="/sign-in">Sign in</Link>
           </nav>
         </header>
 
@@ -135,10 +135,10 @@ export function AiVisibilityPageTemplate({ page }: { page: AiVisibilityPage }) {
             </article>
 
             <article className="card sidebarCard">
-              <h2>Editorial note</h2>
+              <h2>Delivery note</h2>
               <p className="muted">
-                This template keeps the answer block, visible evidence, FAQ copy, and schema
-                fields aligned from one source of truth.
+                These pages explain the founder-led pilot clearly, but they do not imply a public
+                self-serve product or guaranteed outcomes.
               </p>
             </article>
           </aside>
@@ -147,7 +147,7 @@ export function AiVisibilityPageTemplate({ page }: { page: AiVisibilityPage }) {
         <section className="faqSection">
           <div className="sectionIntro">
             <div className="eyebrow">FAQ</div>
-            <h2 className="section-title">Visible answers for crawlability.</h2>
+            <h2 className="section-title">Plain answers to the real objections.</h2>
           </div>
           <div className="stack">
             {page.faq.map((item) => (

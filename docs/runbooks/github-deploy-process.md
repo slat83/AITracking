@@ -7,11 +7,12 @@ Read this together with [vps-deployment.md](./vps-deployment.md), [vps-operation
 ## Hard rules
 
 - `main` is the only production deployment branch.
-- Do not deploy from a feature branch, a detached commit that is not on `main`, or a server worktree with uncommitted changes.
+- Do not deploy from a feature branch or a detached commit that is not on `main`.
 - Every implementation change must map to a tracked issue.
 - Every production-bound merge must pass CI before it is deployed.
 - Every deploy must record the exact commit SHA that reached the VPS.
 - Direct pushes to `main` are not part of the approved workflow.
+- Do not hot-edit application code on the VPS. Production code reaches the server only through immutable release bundles created by GitHub Actions.
 
 ## Branch model
 
@@ -117,8 +118,9 @@ Behavior:
 - triggers automatically only after `CI` succeeds for a push to `main`
 - supports manual `workflow_dispatch` for an approved redeploy or rollback follow-through
 - uses the GitHub `production` environment so approvals and secret scoping can be enforced there
-- refuses to deploy if the server checkout is dirty
-- fast-forwards the VPS checkout to `origin/main`
+- uploads the repo contents as a tarball artifact for the target commit SHA
+- unpacks the tarball into `VPS_APP_DIR/releases/<git-sha>`
+- symlinks `VPS_APP_DIR/current` to the new release and links in `VPS_APP_DIR/shared/.env.production`
 - rebuilds the Compose stack and runs the deep health check before marking the workflow successful
 
 Required repository secrets:
@@ -177,28 +179,26 @@ Rules:
 
 - `VPS_USER` must be the hardened non-root admin user created through `docs/runbooks/vps-access-hardening.md`, never `root`.
 - `VPS_SSH_KNOWN_HOSTS` must contain the pinned host key entry for the VPS. Do not replace host verification with opportunistic `ssh-keyscan` inside the workflow.
-- `VPS_APP_DIR` must point at the checked-out repository root on the server, for example `/opt/flowvory`.
+- `VPS_APP_DIR` must point at the release root on the server, for example `/opt/flowvory`, with `shared/`, `releases/`, and `current` managed underneath it.
 - Manual workflow runs are not a bypass for CI on unmerged branches. The approved target is still the commit already on `main`.
 
 ## VPS release procedure
 
-From the server repository checkout:
+Routine releases should be triggered from GitHub Actions, then verified on the VPS. From the server:
 
 ```bash
-git status --short
-git fetch origin
-git checkout main
-git pull --ff-only origin main
-git rev-parse HEAD
-docker compose --env-file .env.production -f docker-compose.prod.yml up -d --build
+cd /opt/flowvory
+readlink current
+ls releases
+docker compose --env-file shared/.env.production -f current/docker-compose.prod.yml ps
 curl -fsS http://127.0.0.1:3000/api/health?deep=1
 ```
 
 Rules:
 
-- `git status --short` must be empty before deploy. If it is not, stop and clean up the server checkout before continuing.
-- Use `git pull --ff-only` so the VPS cannot create an accidental merge commit.
-- Record the deployed `HEAD` SHA in the linked issue or operating log.
+- The release target must already be on `main` and have a green `CI` run.
+- Record the deployed release SHA and the `current` symlink target in the linked issue or operating log.
+- Do not modify files inside a release directory to "patch" production. Ship a new release instead.
 - If health checks fail, stop and decide between rollback and forward-fix before more changes land on the server.
 
 ## Rollback procedure
@@ -207,15 +207,15 @@ Every deploy must leave enough evidence to return to the last known-good release
 
 Minimum rollback record:
 
-- last known-good commit SHA
+- last known-good release SHA
 - backup confirmation when the release included risky data changes
 - whether the release ran schema migrations
 
 If rollback is required:
 
-1. Identify the last known-good `main` commit.
-2. Check out that commit on the VPS.
-3. Re-run `docker compose --env-file .env.production -f docker-compose.prod.yml up -d --build`.
+1. Identify the last known-good release directory under `VPS_APP_DIR/releases`.
+2. Repoint `VPS_APP_DIR/current` to that release.
+3. Re-run `docker compose --env-file VPS_APP_DIR/shared/.env.production -f VPS_APP_DIR/current/docker-compose.prod.yml up -d --build --remove-orphans`.
 4. Restore the database only if the failure cannot be corrected at the application layer and the rollback plan explicitly requires it.
 5. Record the rollback result in the issue before any new deploy attempt.
 

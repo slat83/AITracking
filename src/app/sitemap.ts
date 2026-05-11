@@ -13,16 +13,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
   ];
 
-  const contentPages = aiVisibilityPages.map((page) => ({
-    url: absoluteUrl(page.pathname),
-    lastModified: page.updatedAt,
-    changeFrequency: page.kind === "article" ? ("weekly" as const) : ("monthly" as const),
-    priority: page.pathname.startsWith("/compare/")
-      || page.pathname.startsWith("/trust/is-epicvin-legit")
-      || page.pathname.startsWith("/pricing/cheap-vin-check")
-      ? 0.9
-      : 0.7,
-  }));
+  const contentPages = aiVisibilityPages
+    .filter((page) => page.indexable !== false && page.kind !== "author")
+    .map((page) => ({
+      url: absoluteUrl(page.pathname),
+      lastModified: page.updatedAt,
+      changeFrequency: page.kind === "article" ? ("weekly" as const) : ("monthly" as const),
+      priority: page.pathname === "/trust" ? 0.9 : 0.8,
+    }));
 
   return [...staticPages, ...contentPages];
 }

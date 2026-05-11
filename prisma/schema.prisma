@@ -39,6 +39,37 @@ enum AccountStatus {
   PAUSED
 }
 
+enum PilotStatus {
+  LEAD_SUBMITTED
+  FIT_REVIEW
+  ACCEPTED_PENDING_INVITE
+  INVITE_SENT
+  ONBOARDING_IN_PROGRESS
+  READY_FOR_AUDIT
+  AUDIT_IN_PROGRESS
+  WAITING_ON_FOUNDER
+  DELIVERY_READY
+  DELIVERED
+  FOLLOW_UP
+  DECLINED
+  PAUSED
+}
+
+enum PilotContactStatus {
+  PENDING
+  INVITED
+  ACTIVE
+  PAUSED
+}
+
+enum PilotInvoiceStatus {
+  DRAFT
+  SENT
+  PAID
+  VOID
+  OVERDUE
+}
+
 enum DistributionTaskStatus {
   TODO
   IN_PROGRESS
@@ -86,6 +117,104 @@ enum ReviewReportWindow {
   MONTH
 }
 
+enum ScenarioStatus {
+  INTAKE
+  TRIAGE
+  READY_FOR_DRAFT
+  ACTIVE
+  BLOCKED
+  IN_OBSERVATION
+  RESOLVED
+  ARCHIVED
+}
+
+enum ScenarioPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum ScenarioUrgency {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum BusinessImpact {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum ProofReadiness {
+  MISSING
+  PARTIAL
+  READY
+  RESTRICTED
+}
+
+enum ApprovalStatus {
+  NOT_REQUIRED
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  BLOCKED
+  COMPLETE
+  CANCELED
+}
+
+enum TaskKind {
+  QUALIFY
+  DRAFT
+  REVIEW
+  RESPOND
+  OUTREACH
+  PUBLISH
+  ESCALATE
+  MEASURE
+}
+
+enum ArtifactStatus {
+  DRAFT
+  IN_REVIEW
+  APPROVED
+  PUBLISHED
+  ARCHIVED
+}
+
+enum ExecutionTargetStatus {
+  ACTIVE
+  PAUSED
+  ARCHIVED
+}
+
+enum OutcomeStatus {
+  IN_OBSERVATION
+  RESOLVED
+  PARTIALLY_RESOLVED
+  NO_EFFECT
+  BRANCHED
+}
+
+enum PrerequisiteType {
+  EVIDENCE
+  APPROVAL
+  DEPENDENCY
+  ACCESS
+}
+
+enum ScenarioPrerequisiteStatus {
+  MISSING
+  SATISFIED
+  WAIVED
+  BLOCKED
+}
+
 model User {
   id                String             @id @default(cuid())
   email             String             @unique
@@ -99,23 +228,310 @@ model User {
   reviewDrafts      Draft[]            @relation("DraftReviewer")
   assignedTasks     DistributionTask[] @relation("TaskAssignee")
   reviewInvites     ReviewInvite[]     @relation("ReviewInviteOwner")
+  ownedScenarios    Scenario[]         @relation("ScenarioOwner")
+  scenarioTasks     Task[]             @relation("ScenarioTaskOwner")
+  createdArtifacts  Artifact[]         @relation("ArtifactCreator")
+  evidenceAssets    EvidenceAsset[]    @relation("EvidenceAssetOwner")
+  ownedPrerequisites ScenarioPrerequisite[] @relation("ScenarioPrerequisiteOwner")
   auditEvents       AuditEvent[]
+  pilotContacts     PilotContact[]
+  primaryPilots     Pilot[]            @relation("PilotPrimaryContact")
+}
+
+model Workspace {
+  id          String     @id @default(cuid())
+  name        String
+  slug        String     @unique
+  isDefault   Boolean    @default(false)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  accounts    Account[]
+  scenarios   Scenario[]
+  targets     ExecutionTarget[]
+  evidenceAssets EvidenceAsset[]
+  pilots      Pilot[]
+  trackedKeywords TrackedKeyword[]
+  trackedThreads TrackedRedditThread[]
+  trackedPosts  TrackedRedditPost[]
+}
+
+model Account {
+  id          String     @id @default(cuid())
+  workspaceId String
+  name        String
+  slug        String
+  isDefault   Boolean    @default(false)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  workspace   Workspace  @relation(fields: [workspaceId], references: [id])
+  scenarios   Scenario[]
+  targets     ExecutionTarget[]
+  evidenceAssets EvidenceAsset[]
+  pilots      Pilot[]
+
+  @@unique([workspaceId, slug])
+}
+
+model TrackedKeyword {
+  id          String    @id @default(cuid())
+  workspaceId String
+  keyword     String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
+
+  @@unique([workspaceId, keyword])
+  @@index([workspaceId, createdAt])
+}
+
+model TrackedRedditThread {
+  id          String    @id @default(cuid())
+  workspaceId String
+  url         String
+  title       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
+
+  @@unique([workspaceId, url])
+  @@index([workspaceId, createdAt])
+}
+
+model TrackedRedditPost {
+  id          String    @id @default(cuid())
+  workspaceId String
+  url         String
+  title       String?
+  subreddit   String?
+  author      String?
+  answeredAt  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
+
+  @@unique([workspaceId, url])
+  @@index([workspaceId, answeredAt, createdAt])
+}
+
+model Pilot {
+  id                   String        @id @default(cuid())
+  workspaceId          String?       @unique
+  accountId            String?       @unique
+  primaryContactUserId String?
+  brandName            String
+  websiteUrl           String
+  status               PilotStatus   @default(LEAD_SUBMITTED)
+  primaryContactName   String
+  primaryContactEmail  String
+  primaryContactRole   String?
+  storePlatform        String?
+  productCategory      String?
+  monthlyRevenueBand   String?
+  targetGeography      String?
+  topCompetitors       String[]
+  businessQuestion     String
+  urgencyNotes         String?
+  reviewNotes          String?
+  clarificationRequest String?
+  pauseReason          String?
+  currentRequest       String?
+  currentStageNote     String?
+  prioritySurfaces     String[]
+  supportingContext    String?
+  findingsSummary      String?       @db.Text
+  actionPlan           String?       @db.Text
+  deliveryNotes        String?
+  targetDeliveryDate   DateTime?
+  invitedAt            DateTime?
+  acceptedAt           DateTime?
+  declinedAt           DateTime?
+  onboardingStartedAt  DateTime?
+  onboardingCompletedAt DateTime?
+  deliveredAt          DateTime?
+  pausedAt             DateTime?
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+  workspace            Workspace?    @relation(fields: [workspaceId], references: [id])
+  account              Account?      @relation(fields: [accountId], references: [id])
+  primaryContactUser   User?         @relation("PilotPrimaryContact", fields: [primaryContactUserId], references: [id])
+  contacts             PilotContact[]
+  invites              PilotInvite[]
+  invoices             PilotInvoice[]
+
+  @@index([status, updatedAt])
+  @@index([primaryContactEmail])
+}
+
+model PilotContact {
+  id             String             @id @default(cuid())
+  pilotId        String
+  userId         String?
+  name           String
+  email          String
+  roleLabel      String?
+  isPrimary      Boolean            @default(false)
+  status         PilotContactStatus @default(PENDING)
+  invitedAt      DateTime?
+  acceptedAt     DateTime?
+  lastInviteSentAt DateTime?
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  pilot          Pilot              @relation(fields: [pilotId], references: [id])
+  user           User?              @relation(fields: [userId], references: [id])
+  invites        PilotInvite[]
+
+  @@unique([pilotId, email])
+  @@index([email, status])
+}
+
+model PilotInvite {
+  id         String   @id @default(cuid())
+  pilotId     String
+  contactId   String
+  token       String   @unique
+  expiresAt   DateTime
+  sentAt      DateTime @default(now())
+  acceptedAt  DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  pilot       Pilot    @relation(fields: [pilotId], references: [id])
+  contact     PilotContact @relation(fields: [contactId], references: [id])
+
+  @@index([pilotId, acceptedAt])
+  @@index([contactId, acceptedAt])
+}
+
+model PilotInvoice {
+  id           String            @id @default(cuid())
+  pilotId       String
+  invoiceNumber String           @unique
+  status       PilotInvoiceStatus @default(DRAFT)
+  amountCents  Int
+  currency     String            @default("USD")
+  description  String
+  notes        String?
+  issuedAt     DateTime?
+  dueAt        DateTime?
+  sentAt       DateTime?
+  paidAt       DateTime?
+  voidedAt     DateTime?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  pilot        Pilot             @relation(fields: [pilotId], references: [id])
+
+  @@index([pilotId, status])
+  @@index([dueAt, status])
+}
+
+model ScenarioType {
+  id          String     @id @default(cuid())
+  slug        String     @unique
+  name        String
+  family      String
+  description String?
+  launchPack  String?
+  launchLabel String?
+  isActive    Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  playbooks   Playbook[]
+  scenarios   Scenario[]
+  evidenceAssets EvidenceAsset[]
+}
+
+model Playbook {
+  id                    String     @id @default(cuid())
+  slug                  String     @unique
+  name                  String
+  summary               String
+  scenarioTypeId        String
+  recommendedNextAction String?
+  defaultTaskKind       TaskKind?
+  proofGuidance         String?
+  guardrails            Json?
+  isActive              Boolean    @default(true)
+  isDefault             Boolean    @default(false)
+  createdAt             DateTime   @default(now())
+  updatedAt             DateTime   @updatedAt
+  scenarioType          ScenarioType @relation(fields: [scenarioTypeId], references: [id])
+  scenarios             Scenario[]
+  prerequisites         PlaybookPrerequisite[]
+
+  @@index([scenarioTypeId, isDefault])
+}
+
+model Scenario {
+  id                    String           @id @default(cuid())
+  workspaceId           String
+  accountId             String
+  sourceOpportunityId   String?          @unique
+  scenarioTypeId        String
+  playbookId            String?
+  title                 String
+  summary               String
+  status                ScenarioStatus   @default(INTAKE)
+  priority              ScenarioPriority @default(MEDIUM)
+  urgency               ScenarioUrgency  @default(MEDIUM)
+  businessImpact        BusinessImpact   @default(MEDIUM)
+  proofReadiness        ProofReadiness   @default(MISSING)
+  approvalStatus        ApprovalStatus   @default(NOT_REQUIRED)
+  blockedReason         String?
+  scenarioGoal          String?
+  signalSummary         String?
+  recommendedNextAction String?
+  ownerId               String?
+  capturedAt            DateTime         @default(now())
+  triagedAt             DateTime?
+  firstTaskAt           DateTime?
+  blockedAt             DateTime?
+  approvalRequestedAt   DateTime?
+  approvalResolvedAt    DateTime?
+  firstOutcomeAt        DateTime?
+  lastSyncedAt          DateTime?
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
+  workspace             Workspace        @relation(fields: [workspaceId], references: [id])
+  account               Account          @relation(fields: [accountId], references: [id])
+  sourceOpportunity     Opportunity?     @relation(fields: [sourceOpportunityId], references: [id])
+  scenarioType          ScenarioType     @relation(fields: [scenarioTypeId], references: [id])
+  playbook              Playbook?        @relation(fields: [playbookId], references: [id])
+  owner                 User?            @relation("ScenarioOwner", fields: [ownerId], references: [id])
+  tasks                 Task[]
+  artifacts             Artifact[]
+  outcome               Outcome?
+  evidenceLinks         ScenarioEvidenceAsset[]
+  prerequisites         ScenarioPrerequisite[]
+
+  @@index([workspaceId, status, priority])
+  @@index([scenarioTypeId, updatedAt])
 }
 
 model Opportunity {
-  id          String              @id @default(cuid())
-  title       String
-  summary     String
-  sourceName  String
-  sourceUrl   String?
-  status      OpportunityStatus   @default(INTAKE)
-  priority    OpportunityPriority @default(MEDIUM)
-  tags        String[]
-  createdAt   DateTime            @default(now())
-  updatedAt   DateTime            @updatedAt
-  ownerId     String?
-  owner       User?               @relation("OpportunityOwner", fields: [ownerId], references: [id])
-  drafts      Draft[]
+  id                  String              @id @default(cuid())
+  title               String
+  summary             String
+  sourceName          String
+  sourceUrl           String?
+  scenario            String?
+  whyNow              String?
+  suggestedAssetAngle String?
+  briefAudience       String?
+  briefQuestion       String?
+  assetType           String?
+  proofRequirement    String?
+  targetCta           String?
+  rejectionReason     String?
+  status              OpportunityStatus   @default(INTAKE)
+  priority            OpportunityPriority @default(MEDIUM)
+  tags                String[]
+  capturedAt          DateTime            @default(now())
+  dueDate             DateTime?
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  ownerId             String?
+  owner               User?               @relation("OpportunityOwner", fields: [ownerId], references: [id])
+  drafts              Draft[]
+  scenarioRecord      Scenario?
 }
 
 model Draft {
@@ -173,6 +589,158 @@ model AuditEvent {
   createdAt  DateTime @default(now())
   actorId    String?
   actor      User?    @relation(fields: [actorId], references: [id])
+}
+
+model Task {
+  id          String     @id @default(cuid())
+  scenarioId  String
+  title       String
+  summary     String?
+  kind        TaskKind
+  status      TaskStatus @default(TODO)
+  ownerId     String?
+  dueAt       DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  scenario    Scenario   @relation(fields: [scenarioId], references: [id])
+  owner       User?      @relation("ScenarioTaskOwner", fields: [ownerId], references: [id])
+
+  @@index([scenarioId, status])
+}
+
+model Artifact {
+  id          String         @id @default(cuid())
+  scenarioId  String
+  title       String
+  artifactType String
+  body        String?        @db.Text
+  status      ArtifactStatus @default(DRAFT)
+  createdById String?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  scenario    Scenario       @relation(fields: [scenarioId], references: [id])
+  createdBy   User?          @relation("ArtifactCreator", fields: [createdById], references: [id])
+
+  @@index([scenarioId, status])
+}
+
+model EvidenceAsset {
+  id                   String         @id @default(cuid())
+  workspaceId          String
+  accountId            String?
+  scenarioTypeId       String?
+  slug                 String?        @unique
+  title                String
+  proofAssetType       String
+  claimSupported       String
+  sourceUrl            String?
+  notes                String?
+  evidenceOwnerId      String?
+  readiness            ProofReadiness @default(MISSING)
+  verificationMethod   String?
+  allowedUsage         String?
+  restrictedChannels   String[]
+  sensitivityLevel     String?
+  lastVerifiedAt       DateTime?
+  expirationReviewAt   DateTime?
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+  workspace            Workspace      @relation(fields: [workspaceId], references: [id])
+  account              Account?       @relation(fields: [accountId], references: [id])
+  scenarioType         ScenarioType?  @relation(fields: [scenarioTypeId], references: [id])
+  evidenceOwner        User?          @relation("EvidenceAssetOwner", fields: [evidenceOwnerId], references: [id])
+  scenarioLinks        ScenarioEvidenceAsset[]
+  satisfiedRequirements ScenarioPrerequisite[]
+
+  @@index([workspaceId, readiness])
+  @@index([scenarioTypeId, proofAssetType])
+}
+
+model ScenarioEvidenceAsset {
+  scenarioId      String
+  evidenceAssetId String
+  usageSummary    String?
+  isPrimary       Boolean      @default(false)
+  createdAt       DateTime     @default(now())
+  scenario        Scenario     @relation(fields: [scenarioId], references: [id])
+  evidenceAsset   EvidenceAsset @relation(fields: [evidenceAssetId], references: [id])
+
+  @@id([scenarioId, evidenceAssetId])
+  @@index([evidenceAssetId])
+}
+
+model PlaybookPrerequisite {
+  id                     String             @id @default(cuid())
+  playbookId             String
+  title                  String
+  description            String?
+  prerequisiteType       PrerequisiteType
+  requiredProofAssetType String?
+  requiredUsage          String?
+  ownerRole              String?
+  sortOrder              Int                @default(0)
+  isRequired             Boolean            @default(true)
+  isActive               Boolean            @default(true)
+  createdAt              DateTime           @default(now())
+  updatedAt              DateTime           @updatedAt
+  playbook               Playbook           @relation(fields: [playbookId], references: [id])
+  scenarioPrerequisites  ScenarioPrerequisite[]
+
+  @@index([playbookId, sortOrder])
+  @@unique([playbookId, title])
+}
+
+model ScenarioPrerequisite {
+  id                    String                      @id @default(cuid())
+  scenarioId            String
+  playbookPrerequisiteId String?
+  evidenceAssetId       String?
+  title                 String
+  description           String?
+  prerequisiteType      PrerequisiteType
+  status                ScenarioPrerequisiteStatus @default(MISSING)
+  blockingReason        String?
+  ownerId               String?
+  satisfiedAt           DateTime?
+  waivedAt              DateTime?
+  createdAt             DateTime                    @default(now())
+  updatedAt             DateTime                    @updatedAt
+  scenario              Scenario                    @relation(fields: [scenarioId], references: [id])
+  playbookPrerequisite  PlaybookPrerequisite?       @relation(fields: [playbookPrerequisiteId], references: [id])
+  evidenceAsset         EvidenceAsset?              @relation(fields: [evidenceAssetId], references: [id])
+  owner                 User?                       @relation("ScenarioPrerequisiteOwner", fields: [ownerId], references: [id])
+
+  @@unique([scenarioId, playbookPrerequisiteId])
+  @@index([scenarioId, status])
+}
+
+model ExecutionTarget {
+  id          String                @id @default(cuid())
+  workspaceId String
+  accountId   String?
+  name        String
+  targetType  String
+  details     Json?
+  status      ExecutionTargetStatus @default(ACTIVE)
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+  workspace   Workspace             @relation(fields: [workspaceId], references: [id])
+  account     Account?              @relation(fields: [accountId], references: [id])
+
+  @@index([workspaceId, status])
+}
+
+model Outcome {
+  id             String        @id @default(cuid())
+  scenarioId     String        @unique
+  status         OutcomeStatus
+  summary        String?
+  nextScenarioId String?
+  observedAt     DateTime?
+  resolvedAt     DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  scenario       Scenario      @relation(fields: [scenarioId], references: [id])
 }
 
 model JobRun {

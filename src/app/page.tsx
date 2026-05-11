@@ -13,66 +13,69 @@ export default async function HomePage() {
       <div className="shell">
         <header className="siteHeader">
           <Link className="siteBrand" href="/">
-            Content Ops Visibility
+            Flowvory
           </Link>
           <nav className="siteNav" aria-label="Primary">
-            <Link href={"/compare/best-vin-decoder" as Route}>Compare</Link>
+            <Link href={"/sample-audit" as Route}>Sample audit</Link>
+            <Link href={"/methodology" as Route}>Method</Link>
             <Link href={"/trust" as Route}>Trust</Link>
-            <Link href={"/pricing/cheap-vin-check" as Route}>Pricing</Link>
             <Link href={"/help/faq" as Route}>FAQ</Link>
-            <Link href={session ? "/app" : "/sign-in"}>{session ? "Operator app" : "Sign in"}</Link>
+            <Link href={session ? "/app" : "/sign-in"}>{session ? "Workspace" : "Sign in"}</Link>
           </nav>
         </header>
 
         <section className="hero marketingHero">
-          <div className="eyebrow">AIT-19 • AI visibility foundation</div>
-          <h1>Crawlable public templates for comparison, trust, and pricing intent.</h1>
+          <div className="eyebrow">Founder-led AI Visibility Audit for eCommerce</div>
+          <h1>Find where your brand is missing from AI-driven buying journeys.</h1>
           <p className="lede">
-            This slice adds a shared public-page system for the four priority vehicle-history demand
-            clusters, with canonical metadata, FAQ and breadcrumb schema, support-page links,
-            and crawlable HTML answers.
+            Flowvory runs a founder-led AI Visibility Audit for lean eCommerce brands and delivers
+            a prioritized 30-day action plan covering discovery gaps, trust weaknesses, and the
+            fixes that matter first.
+          </p>
+          <p className="introCopy">
+            This public surface is intentionally narrow. It explains the offer, the audit method,
+            the sample deliverable, and the invite-only access model without pretending the current
+            product is a self-serve SaaS.
           </p>
           <div className="buttonRow">
-            <Link className="button buttonPrimary" href={"/compare/best-vin-decoder" as Route}>
-              Inspect page templates
+            <Link className="button buttonPrimary" href={"/sample-audit" as Route}>
+              See a sample audit
             </Link>
             <Link className="button buttonSecondary" href={session ? "/app" : "/sign-in"}>
-              {session ? "Open dashboard" : "Sign in"}
+              {session ? "Open workspace" : "Access invite-only workspace"}
             </Link>
           </div>
         </section>
 
         <section className="factsGrid">
           <article className="card factCard">
-            <p className="metaLabel">Template model</p>
-            <p className="factValue">1 source of truth</p>
+            <p className="metaLabel">Offer</p>
+            <p className="factValue">Fixed-scope audit</p>
             <p className="muted">
-              Page copy, breadcrumbs, metadata, related links, and schema are generated from
-              the same content records.
+              Flowvory sells one bounded diagnostic first instead of a broad platform promise.
             </p>
           </article>
           <article className="card factCard">
-            <p className="metaLabel">Core routes</p>
-            <p className="factValue">4 launch pages</p>
+            <p className="metaLabel">Best fit</p>
+            <p className="factValue">Founder-led brands</p>
             <p className="muted">
-              Best VIN decoder, legitimacy, Carfax comparison, and cheap VIN check each ship
-              with shared structure.
+              The current buyer is a lean eCommerce team that needs clarity before scaling AI
+              visibility work.
             </p>
           </article>
           <article className="card factCard">
-            <p className="metaLabel">Crawl layer</p>
-            <p className="factValue">Robots + sitemap</p>
+            <p className="metaLabel">Access</p>
+            <p className="factValue">Invite-only workspace</p>
             <p className="muted">
-              Public routes advertise canonical URLs and get indexed through explicit crawl
-              endpoints.
+              Accepted customers move into a guided workspace instead of a self-serve dashboard.
             </p>
           </article>
         </section>
 
         <section className="corePageSection">
           <div className="sectionIntro">
-            <div className="eyebrow">Priority pages</div>
-            <h2 className="section-title">Four public entry points, one reusable template.</h2>
+            <div className="eyebrow">Public path</div>
+            <h2 className="section-title">One coherent story across the launch surfaces.</h2>
           </div>
           <div className="routeGrid">
             {corePages.map((page) => (

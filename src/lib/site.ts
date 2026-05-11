@@ -1,10 +1,10 @@
-const DEFAULT_SITE_URL = "https://content-ops.example.com";
+const DEFAULT_SITE_URL = "https://flowvory.com";
 
 export const siteConfig = {
-  name: "Content Ops Foundation",
-  titleSuffix: "Content Ops Foundation",
+  name: "Flowvory",
+  titleSuffix: "Flowvory",
   description:
-    "Evidence-backed VIN check guidance, trust pages, and comparison content built for search and AI retrieval.",
+    "Founder-led AI Visibility Audit for eCommerce brands, with an invite-only workspace and a practical 30-day action plan.",
   defaultLocale: "en_US",
   siteUrl: getSiteUrl(),
 };

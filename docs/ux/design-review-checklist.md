@@ -2,6 +2,8 @@
 
 Use this checklist for every user-facing ticket before merge or release. It is optimized for early engineering delivery, not for polished design sign-off.
 
+For [AIT-4](/AIT/issues/AIT-4) and [AIT-5](/AIT/issues/AIT-5), review this checklist together with [docs/ux/intake-draft-workflow-contract.md](./intake-draft-workflow-contract.md). The checklist is the review gate; the workflow contract is the expected behavior and labeling reference.
+
 ## Ticket Metadata
 
 - Ticket:

@@ -1,7 +1,7 @@
 {
-  "name": "paperclip-content-ops",
+  "name": "flowvory-app",
   "version": "0.1.0",
-  "description": "Application foundation for the content opportunity and distribution workflow system.",
+  "description": "Canonical Next.js application for Flowvory production and operator workflows.",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -20,7 +20,7 @@
   "keywords": [
     "nextjs",
     "prisma",
-    "content-ops"
+    "flowvory"
   ],
   "author": "",
   "license": "ISC",

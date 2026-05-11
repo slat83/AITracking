@@ -50,695 +50,372 @@ export type AiVisibilityPage = {
   relatedLinks: LinkItem[];
   primaryCta: LinkItem;
   secondaryCta?: LinkItem;
+  indexable?: boolean;
 };
 
-const editorialAuthor: PageAuthor = {
-  name: "Editorial Team",
-  role: "Research and policy review",
-  slug: "editorial-team",
+const founderDeskAuthor: PageAuthor = {
+  name: "Flowvory Founder Desk",
+  role: "Founder-led audit delivery",
+  slug: "founder-desk",
 };
 
 const sharedFacts = {
-  trust: {
-    label: "Trust surface",
-    value: "Visible policy links",
-    detail: "Billing, refund, support, privacy, and methodology links stay one click away.",
+  delivery: {
+    label: "Delivery motion",
+    value: "Founder-led diagnostic",
+    detail: "Flowvory sells a fixed-scope audit first, then uses the workspace for guided follow-through.",
   },
-  evidence: {
-    label: "Evidence model",
-    value: "On-page proof",
-    detail: "Every page ties claims to visible facts so schema and body copy stay aligned.",
+  audience: {
+    label: "Best fit",
+    value: "Lean eCommerce brands",
+    detail: "The current offer is aimed at founder-led or lean teams that need clarity before they scale AI visibility work.",
   },
-  update: {
-    label: "Freshness signal",
-    value: "Reviewed monthly",
-    detail: "Update and review dates are rendered in HTML and reflected in structured data.",
+  access: {
+    label: "Access model",
+    value: "Invite-only workspace",
+    detail: "There is no self-serve product path in this slice. Access is provisioned after manual fit review.",
+  },
+  timing: {
+    label: "Output shape",
+    value: "30-day action plan",
+    detail: "Every public surface points back to a practical audit summary and a prioritized next-step plan.",
   },
 };
 
 export const aiVisibilityPages: AiVisibilityPage[] = [
   {
-    pathname: "/compare/best-vin-decoder",
-    kind: "article",
-    title: "Best VIN Decoder Guide",
-    description:
-      "Compare VIN decoder tools using visible methodology, pricing context, data source expectations, and scenario-based guidance.",
-    eyebrow: "Compare cluster",
-    h1: "What is the best VIN decoder?",
-    answerSummary:
-      "The best VIN decoder depends on whether you need a quick specification lookup, a full vehicle history report, or a lower-cost alternative to premium incumbents. Compare data coverage, report depth, update recency, and policy clarity before paying.",
-    intro:
-      "This template answers the question directly, then shows the criteria behind the answer so buyers and search systems can trace the reasoning instead of reading a vague ranking page.",
-    updatedAt: "2026-05-10",
-    reviewedAt: "2026-05-10",
-    author: editorialAuthor,
-    facts: [
-      {
-        label: "Comparison lens",
-        value: "Coverage, depth, cost, support",
-        detail: "The page focuses on the practical signals buyers use before purchasing a report.",
-      },
-      sharedFacts.evidence,
-      sharedFacts.update,
-    ],
-    sections: [
-      {
-        title: "How to compare VIN decoder tools",
-        paragraphs: [
-          "A useful comparison starts with the outcome you need. Basic decoders can identify a vehicle from the VIN, while paid history products add title, accident, sales, or salvage context.",
-          "A comparison page should stay specific about what each tool can and cannot verify so the recommendation does not overclaim accuracy or completeness.",
-        ],
-        bullets: [
-          "Check whether the page explains data sources and refresh cadence.",
-          "Look for a sample report or evidence gallery that shows the output format.",
-          "Review support, refund, and billing policy visibility before purchase.",
-        ],
-      },
-      {
-        title: "Where this service fits",
-        paragraphs: [
-          "This service should be framed as a credible option for buyers who want a practical vehicle-history workflow without defaulting to the highest-cost provider.",
-          "That claim remains supportable when the page shows methodology, limitations, and adjacent trust resources rather than broad superiority language.",
-        ],
-      },
-    ],
-    faq: [
-      {
-        question: "What should a VIN decoder comparison page include?",
-        answer:
-          "It should include clear criteria, visible evidence, pricing context, known limitations, and links to methodology and trust pages.",
-      },
-      {
-        question: "Is a free VIN decoder enough?",
-        answer:
-          "A free decoder can help with basic identification, but it usually does not replace a fuller vehicle history report when purchase risk matters.",
-      },
-      {
-        question: "How does this page stay compliant?",
-        answer:
-          "The page only marks up facts that are visible in the HTML and avoids unsupported claims about being the single best option for every buyer.",
-      },
-    ],
-    relatedLinks: [
-      { href: "/methodology", label: "Review the comparison methodology" },
-      { href: "/reports/sample-vehicle-history-report", label: "Inspect a sample vehicle history report" },
-      { href: "/pricing/free-vs-paid-vin-check", label: "Compare free and paid VIN checks" },
-      { href: "/trust", label: "Open the trust center" },
-      { href: "/compare/epicvin-vs-carfax", label: "See EpicVIN vs Carfax scenarios" },
-    ],
-    primaryCta: { href: "/reports/sample-vehicle-history-report", label: "View sample report" },
-    secondaryCta: { href: "/trust", label: "Review trust center" },
-  },
-  {
-    pathname: "/trust/is-epicvin-legit",
-    kind: "webpage",
-    title: "Is EpicVIN Legit?",
-    description:
-      "A direct trust page covering support, billing, refund, data-source, and policy signals for users evaluating EpicVIN.",
-    eyebrow: "Trust cluster",
-    h1: "Is EpicVIN legit?",
-    answerSummary:
-      "This service should answer legitimacy concerns with transparent company information, visible policy pages, documented support paths, and a clear explanation of what its reports can and cannot verify.",
-    intro:
-      "Trust pages are not generic About pages. They should reduce billing anxiety and fraud risk concerns by surfacing concrete operating details in a format that search engines and AI systems can cite.",
-    updatedAt: "2026-05-10",
-    reviewedAt: "2026-05-10",
-    author: editorialAuthor,
-    facts: [
-      sharedFacts.trust,
-      {
-        label: "Support path",
-        value: "Human escalation documented",
-        detail: "Support, billing, and policy pages are linked directly from the trust cluster.",
-      },
-      sharedFacts.update,
-    ],
-    sections: [
-      {
-        title: "What a legitimate trust page should prove",
-        paragraphs: [
-          "Users looking for legitimacy signals want operational clarity, not brand language. They need to see how the company handles billing, support, refunds, and data sourcing.",
-          "Search systems also need that same evidence in crawlable HTML so trust-oriented answers are grounded in owned facts instead of forum speculation alone.",
-        ],
-        bullets: [
-          "Link to billing and refund explanations with plain-language summaries.",
-          "Explain how users contact support and what happens after they submit a request.",
-          "Describe what data sources inform a report and where coverage limits apply.",
-        ],
-      },
-      {
-        title: "How this page stays defensible",
-        paragraphs: [
-          "The page avoids claiming perfection or universal user satisfaction. It focuses on whether the business presents enough transparent operating detail for a reasonable buyer to evaluate risk.",
-          "That framing is safer for both compliance and AI retrieval than broad testimonials or unsupported star-rating claims.",
-        ],
-      },
-    ],
-    faq: [
-      {
-        question: "Why do users search for whether a service is legit?",
-        answer:
-          "They usually want reassurance about billing, report quality, support responsiveness, and whether the company explains its service clearly.",
-      },
-      {
-        question: "What evidence helps answer that question?",
-        answer:
-          "Visible trust-center pages, policy summaries, support details, and sample product evidence provide stronger signals than generic marketing copy.",
-      },
-      {
-        question: "Should this page use review schema?",
-        answer:
-          "Only if the page visibly displays compliant first-party or properly sourced review information. Otherwise it should avoid rating markup.",
-      },
-    ],
-    relatedLinks: [
-      { href: "/trust", label: "Browse the trust center hub" },
-      { href: "/trust/billing-and-refunds", label: "Read billing and refund guidance" },
-      { href: "/trust/data-sources", label: "Understand report data sources" },
-      { href: "/help/faq", label: "Open the support FAQ hub" },
-      { href: "/pricing/cheap-vin-check", label: "See the lower-cost entry path" },
-    ],
-    primaryCta: { href: "/trust", label: "Open trust center" },
-    secondaryCta: { href: "/trust/billing-and-refunds", label: "Review billing details" },
-  },
-  {
-    pathname: "/compare/epicvin-vs-carfax",
-    kind: "article",
-    title: "EpicVIN vs Carfax",
-    description:
-      "Scenario-based comparison page for buyers evaluating EpicVIN against Carfax without unsupported superiority claims.",
-    eyebrow: "Compare cluster",
-    h1: "EpicVIN vs Carfax: which fits your search?",
-    answerSummary:
-      "This service can be a sensible alternative for buyers who want vehicle-history context at a lower price point, but the right choice depends on the report depth, data expectations, and purchase risk for the specific vehicle.",
-    intro:
-      "Comparison pages work best when they explain tradeoffs directly. The goal is not to declare a universal winner but to show where each option may fit.",
-    updatedAt: "2026-05-10",
-    reviewedAt: "2026-05-10",
-    author: editorialAuthor,
-    facts: [
-      {
-        label: "Comparison policy",
-        value: "No blanket superiority claims",
-        detail: "The page stays scenario-based and points back to methodology for evaluation criteria.",
-      },
-      sharedFacts.evidence,
-      sharedFacts.update,
-    ],
-    sections: [
-      {
-        title: "What buyers usually compare",
-        paragraphs: [
-          "Most users want to know whether a lower-cost provider still gives them enough signal to make a used-car decision. That means the page should compare workflow fit rather than imply identical products.",
-          "A defensible comparison highlights price positioning, expected report coverage, and the situations where a buyer might still prefer a more established premium option.",
-        ],
-        bullets: [
-          "Explain the evaluation criteria before naming differences.",
-          "Separate price comparisons from coverage and workflow comparisons.",
-          "Add disclaimers when equivalent datasets or outcomes cannot be proven.",
-        ],
-      },
-      {
-        title: "How to keep the page trustworthy",
-        paragraphs: [
-          "The page should link to a sample report, trust documentation, and the comparison methodology so readers can inspect the basis for each claim.",
-          "That same structure improves AI readability because the answer block, evidence strip, and related pages create clear retrieval paths.",
-        ],
-      },
-    ],
-    faq: [
-      {
-        question: "Can this page say this service is better than Carfax?",
-        answer:
-          "It should only make narrower, supportable statements tied to price point, use case, or workflow fit unless stronger evidence is visibly presented.",
-      },
-      {
-        question: "What makes a comparison page useful?",
-        answer:
-          "Useful comparison pages explain the criteria, show proof, note limitations, and help readers decide which option fits their scenario.",
-      },
-      {
-        question: "Why include related trust pages?",
-        answer:
-          "Support, billing, and data-source pages reduce ambiguity and let readers validate the company behind the comparison.",
-      },
-    ],
-    relatedLinks: [
-      { href: "/methodology", label: "Inspect the comparison methodology" },
-      { href: "/compare/carfax-alternatives", label: "Review Carfax alternative scenarios" },
-      { href: "/trust/is-epicvin-legit", label: "Check trust and legitimacy signals" },
-      { href: "/reports/sample-vehicle-history-report", label: "See a sample report" },
-      { href: "/pricing/cheap-vin-check", label: "Explore lower-cost VIN checks" },
-    ],
-    primaryCta: { href: "/methodology", label: "Read the methodology" },
-    secondaryCta: { href: "/reports/sample-vehicle-history-report", label: "View sample report" },
-  },
-  {
-    pathname: "/pricing/cheap-vin-check",
-    kind: "article",
-    title: "Cheap VIN Check Guide",
-    description:
-      "Entry-point pricing page for budget-minded buyers comparing cheap VIN check options without oversimplifying risk.",
-    eyebrow: "Pricing cluster",
-    h1: "What is a cheap VIN check worth paying for?",
-    answerSummary:
-      "A cheap VIN check is worth paying for when it gives enough vehicle-history context to reduce purchase risk without pretending that a lower price means zero tradeoffs. Buyers should compare proof, support, and report depth alongside price.",
-    intro:
-      "Low-price intent is high-conversion only when the page acknowledges tradeoffs clearly. The content should help users decide when a budget option is enough and when deeper investigation is still necessary.",
-    updatedAt: "2026-05-10",
-    reviewedAt: "2026-05-10",
-    author: editorialAuthor,
-    facts: [
-      {
-        label: "Buyer segment",
-        value: "Budget-conscious used-car shoppers",
-        detail: "The page is tuned for lower-cost decision paths without hiding risk boundaries.",
-      },
-      sharedFacts.trust,
-      sharedFacts.update,
-    ],
-    sections: [
-      {
-        title: "How to evaluate low-cost VIN checks",
-        paragraphs: [
-          "Price matters, but it is not the only variable. Buyers still need to know what a report covers, how the provider explains limitations, and whether support and refund paths are easy to find.",
-          "A strong low-cost page makes those tradeoffs explicit so the reader can judge value instead of focusing on the headline price alone.",
-        ],
-        bullets: [
-          "Show which buyer scenarios fit a lower-cost report best.",
-          "Link directly to trust and support assets from the pricing page.",
-          "Keep FAQ answers visible in HTML for crawlability and answer extraction.",
-        ],
-      },
-      {
-        title: "Why this matters for AI visibility",
-        paragraphs: [
-          "Budget-intent queries often become simple AI questions such as whether a cheaper alternative exists. Pages that answer directly and show evidence are easier for retrieval systems to summarize accurately.",
-          "That makes pricing, proof, and policy links part of the same visibility system, not separate site concerns.",
-        ],
-      },
-    ],
-    faq: [
-      {
-        question: "Is the cheapest VIN check always the best choice?",
-        answer:
-          "No. The best choice depends on whether the report gives enough evidence for the decision you are making and whether the provider is transparent about coverage and support.",
-      },
-      {
-        question: "What should a cheap VIN check page link to?",
-        answer:
-          "It should link to trust, billing, methodology, and sample-report pages so users can evaluate price in context.",
-      },
-      {
-        question: "Can this page include FAQ schema?",
-        answer:
-          "Yes, as long as the visible FAQ questions and answers match the markup exactly.",
-      },
-    ],
-    relatedLinks: [
-      { href: "/pricing/free-vs-paid-vin-check", label: "Compare free and paid VIN checks" },
-      { href: "/trust/is-epicvin-legit", label: "Review legitimacy signals" },
-      { href: "/trust/billing-and-refunds", label: "See billing and refund details" },
-      { href: "/methodology", label: "Read the evaluation methodology" },
-      { href: "/compare/best-vin-decoder", label: "Compare VIN decoder options" },
-    ],
-    primaryCta: { href: "/pricing/free-vs-paid-vin-check", label: "Compare free vs paid" },
-    secondaryCta: { href: "/trust/billing-and-refunds", label: "Review billing policy" },
-  },
-  {
     pathname: "/trust",
     kind: "webpage",
-    title: "Trust Center",
+    title: "Flowvory Trust Center",
     description:
-      "Central hub for support, billing, policy, and data-source pages that support AI visibility and user trust.",
-    eyebrow: "Support hub",
-    h1: "Trust center",
+      "Company, access, privacy, delivery, and support expectations for Flowvory's founder-led AI Visibility Audit for eCommerce brands.",
+    eyebrow: "Trust center",
+    h1: "Trust the operating model before you trust the audit.",
     answerSummary:
-      "This hub centralizes the company, policy, and product evidence pages that public trust content should reference.",
+      "Flowvory is currently sold as a founder-led, fixed-scope AI Visibility Audit for eCommerce brands. Access is invite-only, delivery is manual, and the workspace is provisioned only after fit review.",
     intro:
-      "Trust pages work better as a connected system than as isolated support documents. This hub keeps those resources linked within a short crawl path.",
+      "This trust surface is intentionally practical. It explains who the service is for, how access works, what a client receives, and where Flowvory is deliberately not overclaiming product maturity.",
     updatedAt: "2026-05-10",
     reviewedAt: "2026-05-10",
-    author: editorialAuthor,
-    facts: [sharedFacts.trust, sharedFacts.evidence, sharedFacts.update],
+    author: founderDeskAuthor,
+    facts: [sharedFacts.delivery, sharedFacts.audience, sharedFacts.access],
     sections: [
       {
-        title: "What belongs in a trust center",
+        title: "Who Flowvory is for",
         paragraphs: [
-          "The trust center should gather billing, refund, support, privacy, methodology, and evidence resources in one place.",
-          "That structure helps users find answers quickly and gives search systems a consistent set of owned sources to crawl.",
+          "The current offer is designed for founder-led or lean eCommerce brands that know AI-mediated discovery matters but do not yet have a clear picture of where they are weak, invisible, or structurally underrepresented.",
+          "It is not positioned as a broad agency retainer, a generic GEO platform, or a self-serve SaaS signup flow.",
+        ],
+      },
+      {
+        title: "How access and delivery work",
+        paragraphs: [
+          "Flowvory reviews pilot fit manually, prepares the workspace after acceptance, and uses that invite-only environment to collect inputs, show status, and deliver findings.",
+          "That means the public site should set expectations clearly: no open registration, no fake automation, and no implied instant software onboarding.",
+        ],
+        bullets: [
+          "Manual fit review before workspace access is provisioned.",
+          "Invite-only sign-in for accepted customers and operators.",
+          "Audit output centered on findings, evidence, and a practical 30-day plan.",
+        ],
+      },
+      {
+        title: "Privacy, billing, and support posture",
+        paragraphs: [
+          "Client inputs are collected for audit delivery and workspace collaboration, not for a public self-serve funnel. Privacy expectations should be confirmed before a pilot workspace is opened.",
+          "Billing terms, delivery expectations, and any follow-up support scope are handled as part of the manual pilot agreement rather than implied through generic SaaS pricing copy.",
+        ],
+      },
+      {
+        title: "What Flowvory does not promise",
+        paragraphs: [
+          "The audit does not guarantee rankings, category wins, or automatic implementation. It is a diagnostic and prioritization service.",
+          "Flowvory is also not claiming public case-study proof, testimonial volume, or refund language that has not been finalized in the product and operating workflow yet.",
         ],
       },
     ],
     faq: [
       {
-        question: "Why use a trust center hub?",
+        question: "Is Flowvory self-serve?",
         answer:
-          "A hub shortens the path between comparison or pricing pages and the supporting trust details that validate them.",
+          "No. The current slice is an invite-only, founder-led service workflow rather than a self-serve signup product.",
+      },
+      {
+        question: "What happens after a brand is accepted?",
+        answer:
+          "Flowvory provisions a workspace, confirms inputs, completes the audit, and delivers a prioritized 30-day action plan with supporting evidence.",
+      },
+      {
+        question: "Does this page publish detailed pricing or refund promises?",
+        answer:
+          "No. Those terms are intentionally handled during manual pilot scoping so the public site does not imply policies that have not been operationalized yet.",
       },
     ],
     relatedLinks: [
-      { href: "/trust/is-epicvin-legit", label: "Is EpicVIN legit?" },
-      { href: "/trust/billing-and-refunds", label: "Billing and refunds" },
-      { href: "/trust/data-sources", label: "Data sources" },
-      { href: "/help/faq", label: "FAQ hub" },
-      { href: "/reports/sample-vehicle-history-report", label: "Sample report" },
+      { href: "/methodology", label: "Review the audit method" },
+      { href: "/sample-audit", label: "See the sample audit structure" },
+      { href: "/help/faq", label: "Read the audit FAQ" },
+      { href: "/sign-in", label: "Access the invite-only workspace" },
     ],
-    primaryCta: { href: "/trust/is-epicvin-legit", label: "Review legitimacy page" },
+    primaryCta: { href: "/sample-audit", label: "See a sample audit" },
+    secondaryCta: { href: "/sign-in", label: "Open workspace access" },
   },
   {
     pathname: "/methodology",
     kind: "webpage",
-    title: "VIN Comparison Methodology",
+    title: "Flowvory Audit Method",
     description:
-      "Editorial methodology describing how comparison and pricing pages evaluate VIN check products and trust signals.",
-    eyebrow: "Methodology hub",
-    h1: "How comparison pages are evaluated",
+      "What Flowvory reviews during an AI Visibility Audit, how findings are prioritized, and what the 30-day action plan includes.",
+    eyebrow: "Method",
+    h1: "How the audit works before any recommendations are made.",
     answerSummary:
-      "This methodology explains the criteria behind comparison, trust, and pricing pages so readers can see how conclusions are formed.",
+      "Flowvory reviews priority discovery prompts, competitor patterns, trust surfaces, and core commerce pages to identify visibility gaps, weak representation, and the actions that matter first.",
     intro:
-      "Methodology pages reduce ambiguity. They make it easier to defend comparison language and keep related pages aligned on the same criteria.",
+      "The method exists to make the output defensible. It keeps the audit grounded in observed surfaces, not vague platform claims or unsupported ranking promises.",
     updatedAt: "2026-05-10",
     reviewedAt: "2026-05-10",
-    author: editorialAuthor,
-    facts: [
-      {
-        label: "Methodology pillars",
-        value: "Coverage, usability, cost, policy clarity",
-        detail: "Shared criteria help comparison pages stay consistent instead of drifting claim by claim.",
-      },
-      sharedFacts.evidence,
-      sharedFacts.update,
-    ],
+    author: founderDeskAuthor,
+    facts: [sharedFacts.delivery, sharedFacts.timing, sharedFacts.audience],
     sections: [
       {
-        title: "Core evaluation criteria",
+        title: "Surfaces reviewed",
         paragraphs: [
-          "The methodology page should define the criteria that every comparison page uses, including report scope, pricing, workflow clarity, and policy transparency.",
-          "When those criteria are public, adjacent pages can link back here instead of re-explaining the framework inconsistently.",
+          "The audit focuses on the pages and signals that influence AI-mediated buying journeys: homepage and category framing, product-detail pages, trust and policy surfaces, editorial or help content, and the way a brand appears relative to substitutes or competitors.",
+          "The point is not to score every asset equally. It is to find the gaps most likely to distort how the brand is retrieved, summarized, or trusted.",
         ],
         bullets: [
-          "Data-source clarity and known limitations.",
-          "Ease of understanding report output.",
-          "Support, billing, and refund transparency.",
+          "Category and product-detail surfaces.",
+          "Trust, policy, help, and support surfaces.",
+          "Competitor and substitute comparison patterns.",
+          "Priority query themes connected to the client's commercial question.",
         ],
       },
-    ],
-    faq: [
       {
-        question: "Why publish methodology separately?",
-        answer:
-          "It keeps the evaluation framework stable across multiple comparison pages and gives users one source for how judgments are made.",
-      },
-    ],
-    relatedLinks: [
-      { href: "/compare/best-vin-decoder", label: "Best VIN decoder guide" },
-      { href: "/compare/epicvin-vs-carfax", label: "EpicVIN vs Carfax" },
-      { href: "/pricing/cheap-vin-check", label: "Cheap VIN check guide" },
-      { href: "/trust", label: "Trust center" },
-    ],
-    primaryCta: { href: "/compare/best-vin-decoder", label: "Open comparison template" },
-  },
-  {
-    pathname: "/reports/sample-vehicle-history-report",
-    kind: "webpage",
-    title: "Sample Vehicle History Report",
-    description:
-      "Evidence page showing what a sample vehicle history report should help a buyer inspect before purchasing.",
-    eyebrow: "Evidence page",
-    h1: "Sample vehicle history report",
-    answerSummary:
-      "Sample report pages help users and search systems understand what evidence a VIN-history product exposes before a purchase.",
-    intro:
-      "Evidence pages are reusable trust assets. Comparison, trust, and pricing pages can all point here when they need to ground claims about report output.",
-    updatedAt: "2026-05-10",
-    reviewedAt: "2026-05-10",
-    author: editorialAuthor,
-    facts: [sharedFacts.evidence, sharedFacts.trust, sharedFacts.update],
-    sections: [
-      {
-        title: "What a sample report should show",
+        title: "How findings are prioritized",
         paragraphs: [
-          "A useful sample report page explains what sections a buyer can expect to inspect, such as ownership, accident, title, or sales-history context where available.",
-          "It should also explain that actual coverage varies by vehicle and source availability so the page does not imply guaranteed completeness.",
+          "Flowvory prioritizes issues by buyer impact, trust risk, and implementation leverage. That keeps the first action plan small enough to execute and meaningful enough to change outcomes.",
+          "Some fixes may be content or structured-data changes. Others may be trust, conversion, or proof gaps that block credibility even when discoverability is improving.",
         ],
       },
-    ],
-    faq: [
       {
-        question: "Why is a sample report important?",
-        answer:
-          "It gives readers concrete evidence of the product output and supports the claims made on comparison and trust pages.",
-      },
-    ],
-    relatedLinks: [
-      { href: "/compare/best-vin-decoder", label: "Best VIN decoder guide" },
-      { href: "/compare/epicvin-vs-carfax", label: "EpicVIN vs Carfax" },
-      { href: "/trust", label: "Trust center" },
-    ],
-    primaryCta: { href: "/trust", label: "Review trust center" },
-  },
-  {
-    pathname: "/trust/billing-and-refunds",
-    kind: "webpage",
-    title: "Billing and Refund Guidance",
-    description:
-      "Support page outlining the billing and refund topics that trust-oriented VIN history pages should surface.",
-    eyebrow: "Policy page",
-    h1: "Billing and refund guidance",
-    answerSummary:
-      "Billing and refund pages should explain how charges, cancellations, and support escalation work in plain language.",
-    intro:
-      "This route acts as a support-layer placeholder so trust and pricing pages can link to a concrete billing surface instead of naming a policy that does not exist.",
-    updatedAt: "2026-05-10",
-    reviewedAt: "2026-05-10",
-    author: editorialAuthor,
-    facts: [sharedFacts.trust, sharedFacts.update, sharedFacts.evidence],
-    sections: [
-      {
-        title: "What users need from billing documentation",
+        title: "What the client receives",
         paragraphs: [
-          "The page should explain plan structure, cancellation paths, refund expectations, and where to go for support when charges are disputed.",
+          "The end product is a founder-readable audit summary, a clear set of visibility and trust findings, and a practical 30-day action plan with owner and effort guidance.",
+          "The workspace can also hold supporting screenshots, linked evidence, and the next questions Flowvory needs answered during onboarding or follow-up.",
         ],
       },
-    ],
-    faq: [
       {
-        question: "Why link billing guidance from public pages?",
-        answer:
-          "It reduces pre-purchase anxiety and makes trust claims easier to verify from crawlable HTML.",
-      },
-    ],
-    relatedLinks: [
-      { href: "/trust/is-epicvin-legit", label: "Is EpicVIN legit?" },
-      { href: "/pricing/cheap-vin-check", label: "Cheap VIN check guide" },
-      { href: "/help/faq", label: "FAQ hub" },
-    ],
-    primaryCta: { href: "/trust/is-epicvin-legit", label: "Return to trust page" },
-  },
-  {
-    pathname: "/trust/data-sources",
-    kind: "webpage",
-    title: "Vehicle Report Data Sources",
-    description:
-      "Support page describing the role of data-source transparency in VIN history and decoder content.",
-    eyebrow: "Policy page",
-    h1: "Vehicle report data-source guidance",
-    answerSummary:
-      "Data-source pages should explain where report information may come from and where coverage gaps or lag can still exist.",
-    intro:
-      "This route gives trust and comparison content a concrete place to point when discussing data quality and limitations.",
-    updatedAt: "2026-05-10",
-    reviewedAt: "2026-05-10",
-    author: editorialAuthor,
-    facts: [sharedFacts.evidence, sharedFacts.update, sharedFacts.trust],
-    sections: [
-      {
-        title: "Why source transparency matters",
+        title: "What this method does not claim",
         paragraphs: [
-          "VIN history buyers want to understand whether a provider explains its data clearly. Search systems also use that clarity when summarizing a service.",
+          "The method does not promise instant gains, guaranteed rankings, or broad automation. It is a structured way to diagnose the brand's current position and identify the highest-value next moves.",
         ],
       },
     ],
     faq: [
       {
-        question: "Should a data-source page promise complete coverage?",
+        question: "Does the audit only review content?",
         answer:
-          "No. It should explain that availability depends on source reporting and should avoid implying universal completeness.",
+          "No. It also reviews trust, conversion, proof, and competitive representation where those factors affect AI-mediated discovery and buyer confidence.",
+      },
+      {
+        question: "Are recommendations automated?",
+        answer:
+          "No. The current service is founder-led and manually reviewed so the output reflects real commercial tradeoffs rather than generic automation.",
+      },
+      {
+        question: "Will the audit implement fixes automatically?",
+        answer:
+          "No. The default output is a prioritized action plan. Implementation can be handled separately once the findings are clear.",
       },
     ],
     relatedLinks: [
-      { href: "/trust", label: "Trust center" },
-      { href: "/compare/best-vin-decoder", label: "Best VIN decoder guide" },
-      { href: "/reports/sample-vehicle-history-report", label: "Sample report" },
+      { href: "/trust", label: "Open the trust center" },
+      { href: "/sample-audit", label: "Inspect the sample audit" },
+      { href: "/help/faq", label: "Read scope and access questions" },
+      { href: "/sign-in", label: "Open the workspace" },
     ],
-    primaryCta: { href: "/reports/sample-vehicle-history-report", label: "View sample report" },
+    primaryCta: { href: "/sample-audit", label: "See the deliverable structure" },
+    secondaryCta: { href: "/trust", label: "Review trust details" },
   },
   {
-    pathname: "/pricing/free-vs-paid-vin-check",
+    pathname: "/sample-audit",
     kind: "article",
-    title: "Free vs Paid VIN Check",
+    title: "Sample AI Visibility Audit",
     description:
-      "Supporting pricing page explaining where a free VIN lookup is enough and when a paid report adds useful risk context.",
-    eyebrow: "Pricing support",
-    h1: "Free vs paid VIN checks",
+      "A sample Flowvory deliverable outline showing the structure of the founder-led AI Visibility Audit and 30-day action plan.",
+    eyebrow: "Sample deliverable",
+    h1: "See the audit structure before you commit to the process.",
     answerSummary:
-      "Free VIN lookups can help with basic identification, while paid reports may add the vehicle-history context buyers need when purchase risk is higher.",
+      "Flowvory's sample audit is meant to show the shape of the deliverable: executive summary, visibility findings, trust and conversion risks, and a prioritized 30-day action plan.",
     intro:
-      "This page supports the cheap-VIN-check cluster with a direct explanation of the free versus paid decision.",
+      "This is intentionally a structure-first surface, not a fabricated case study. The goal is to make the output legible without inventing client results or unsupported proof.",
     updatedAt: "2026-05-10",
     reviewedAt: "2026-05-10",
-    author: editorialAuthor,
-    facts: [sharedFacts.evidence, sharedFacts.trust, sharedFacts.update],
+    author: founderDeskAuthor,
+    facts: [sharedFacts.timing, sharedFacts.delivery, sharedFacts.access],
     sections: [
       {
-        title: "When free is enough",
+        title: "What the sample shows",
         paragraphs: [
-          "A free lookup may be enough when a user only needs basic make, model, and trim identification.",
-          "Once the buyer needs accident, title, theft, or sales-history context, the page should explain why a deeper report may be worth paying for.",
+          "A useful sample deliverable helps a founder understand how the audit will be read internally and acted on after delivery.",
+          "The structure should make it obvious where the summary lives, how findings are grouped, and which actions are expected to move first in the next 30 days.",
+        ],
+        bullets: [
+          "Executive summary and core diagnosis.",
+          "Priority visibility findings by surface or query theme.",
+          "Trust and conversion risks that limit downstream impact.",
+          "Recommended next actions with owner and effort guidance.",
+        ],
+      },
+      {
+        title: "How to read the output",
+        paragraphs: [
+          "The audit is not meant to overwhelm the client with every possible issue. It is meant to clarify what matters first and why.",
+          "That is why the sample format emphasizes prioritization, evidence, and practical sequencing instead of broad narrative polish.",
+        ],
+      },
+      {
+        title: "Why this is a sample, not a case study",
+        paragraphs: [
+          "Flowvory should not imply validated outcome claims that are not yet publicly supported. This page is therefore explicit that the sample is a format preview, not a portfolio of guaranteed results.",
         ],
       },
     ],
     faq: [
       {
-        question: "Why keep this page separate from the pricing page?",
+        question: "Does the sample include real customer outcomes?",
         answer:
-          "It answers a distinct search intent and gives the pricing cluster a support page that links back to the main conversion path.",
+          "No. It is a structure preview designed to show what the audit contains without overstating public proof.",
+      },
+      {
+        question: "Will every client get the same recommendations?",
+        answer:
+          "No. The structure stays consistent, but the findings and action plan depend on the brand, competitors, and the commercial question under review.",
+      },
+      {
+        question: "What happens after the sample stage?",
+        answer:
+          "Accepted clients move into an invite-only workspace where Flowvory confirms inputs, completes the audit, and publishes the final deliverable.",
       },
     ],
     relatedLinks: [
-      { href: "/pricing/cheap-vin-check", label: "Cheap VIN check guide" },
-      { href: "/methodology", label: "Methodology" },
-      { href: "/trust/data-sources", label: "Data sources" },
+      { href: "/methodology", label: "Review the audit method" },
+      { href: "/trust", label: "Review trust and delivery expectations" },
+      { href: "/help/faq", label: "Read the audit FAQ" },
+      { href: "/sign-in", label: "Open workspace access" },
     ],
-    primaryCta: { href: "/pricing/cheap-vin-check", label: "Return to pricing guide" },
-  },
-  {
-    pathname: "/compare/carfax-alternatives",
-    kind: "article",
-    title: "Carfax Alternatives",
-    description:
-      "Supporting comparison page for buyers exploring alternatives to Carfax with scenario-based evaluation guidance.",
-    eyebrow: "Compare support",
-    h1: "What should buyers compare in Carfax alternatives?",
-    answerSummary:
-      "Buyers comparing Carfax alternatives should look at price, data transparency, support clarity, and how much vehicle-history detail they need for the decision at hand.",
-    intro:
-      "This support page gives the primary comparison cluster another crawlable entry point without duplicating the same answer block verbatim.",
-    updatedAt: "2026-05-10",
-    reviewedAt: "2026-05-10",
-    author: editorialAuthor,
-    facts: [sharedFacts.evidence, sharedFacts.update, sharedFacts.trust],
-    sections: [
-      {
-        title: "How alternatives should be framed",
-        paragraphs: [
-          "Alternative pages should stay explicit about use-case fit and should not imply identical products unless the evidence is visible and current.",
-        ],
-      },
-    ],
-    faq: [
-      {
-        question: "What makes an alternatives page useful?",
-        answer:
-          "It gives buyers a comparison framework, points to methodology, and highlights where lower-cost options may still be practical.",
-      },
-    ],
-    relatedLinks: [
-      { href: "/compare/epicvin-vs-carfax", label: "EpicVIN vs Carfax" },
-      { href: "/methodology", label: "Methodology" },
-      { href: "/trust/is-epicvin-legit", label: "Legitimacy page" },
-    ],
-    primaryCta: { href: "/compare/epicvin-vs-carfax", label: "Open main comparison" },
+    primaryCta: { href: "/methodology", label: "Review the method" },
+    secondaryCta: { href: "/sign-in", label: "Access the workspace" },
   },
   {
     pathname: "/help/faq",
     kind: "webpage",
-    title: "FAQ Hub",
+    title: "Flowvory Audit FAQ",
     description:
-      "FAQ hub linking support answers from the trust, pricing, and comparison content system.",
-    eyebrow: "Help hub",
-    h1: "Frequently asked questions",
+      "Scope, timing, inputs, access, and follow-up expectations for Flowvory's founder-led AI Visibility Audit.",
+    eyebrow: "FAQ",
+    h1: "Answers to the questions founders usually ask before an audit starts.",
     answerSummary:
-      "This hub collects recurring questions from the public content system so related pages have a shared support destination.",
+      "The Flowvory FAQ explains who the audit is for, what inputs are required, how the invite-only workspace works, and what the 30-day action plan is designed to help a team do next.",
     intro:
-      "FAQ hubs help maintain crawlable HTML answers without burying important content inside JS-only widgets.",
+      "This FAQ supports the public audit story without turning it into a broad support center. It stays focused on audit scope, timing, access, and follow-up expectations.",
     updatedAt: "2026-05-10",
     reviewedAt: "2026-05-10",
-    author: editorialAuthor,
-    facts: [sharedFacts.evidence, sharedFacts.trust, sharedFacts.update],
+    author: founderDeskAuthor,
+    facts: [sharedFacts.audience, sharedFacts.access, sharedFacts.timing],
     sections: [
       {
-        title: "How this FAQ hub is used",
+        title: "Common scope questions",
         paragraphs: [
-          "Trust, pricing, and comparison pages link here when a user likely needs a broader support answer path.",
+          "Founders usually want to know whether the audit is a strategy deck, a software product, or an implementation retainer. The answer is none of those exactly: it is a fixed-scope diagnostic built to clarify where to act first.",
+          "The audit is narrow by design because clarity is more valuable than pretending every marketing and product problem will be solved in one pass.",
+        ],
+      },
+      {
+        title: "Inputs and onboarding",
+        paragraphs: [
+          "Accepted clients are expected to confirm brand basics, priority surfaces, competitors, and the main business question they want the audit to answer.",
+          "That onboarding happens inside the workspace so Flowvory can keep context, status, and evidence in one system of record.",
+        ],
+      },
+      {
+        title: "Access and follow-up",
+        paragraphs: [
+          "Workspace access is invite-only in this phase. The system is not intended for anonymous product exploration or open registration.",
+          "After delivery, the workspace can support clarifying questions and next-step coordination, but that does not imply a packaged long-term software subscription yet.",
         ],
       },
     ],
     faq: [
       {
-        question: "Why keep FAQ answers in HTML?",
+        question: "Who is the audit best for?",
         answer:
-          "Visible HTML answers are easier for crawlers and retrieval systems to index than content hidden behind client-only interactions.",
+          "Founder-led or lean eCommerce brands that need a clearer view of AI visibility, trust risk, and the fixes that matter first.",
       },
       {
-        question: "Does every question need its own page?",
+        question: "What inputs are required?",
         answer:
-          "No. Only questions with meaningful demand or substantial depth need standalone expansion pages.",
+          "At minimum Flowvory needs the brand context, priority surfaces, competitor set, and the core business question the founder wants answered.",
+      },
+      {
+        question: "How do clients access the workspace?",
+        answer:
+          "Access is provisioned manually after fit review. There is no open signup flow in this slice.",
+      },
+      {
+        question: "Is implementation included?",
+        answer:
+          "Not by default. The core deliverable is the diagnosis and prioritized 30-day action plan.",
       },
     ],
     relatedLinks: [
-      { href: "/trust", label: "Trust center" },
-      { href: "/pricing/cheap-vin-check", label: "Cheap VIN check guide" },
-      { href: "/compare/best-vin-decoder", label: "Best VIN decoder guide" },
+      { href: "/sample-audit", label: "See the sample audit" },
+      { href: "/methodology", label: "Review the audit method" },
+      { href: "/trust", label: "Review trust and access details" },
+      { href: "/sign-in", label: "Open workspace access" },
     ],
-    primaryCta: { href: "/trust", label: "Open trust center" },
+    primaryCta: { href: "/sample-audit", label: "See the sample audit" },
+    secondaryCta: { href: "/sign-in", label: "Access the workspace" },
   },
   {
-    pathname: "/authors/editorial-team",
+    pathname: "/authors/founder-desk",
     kind: "author",
-    title: "Editorial Team",
+    title: "Flowvory Founder Desk",
     description:
-      "Author profile for the team responsible for editorial review of comparison, pricing, and trust content.",
-    eyebrow: "Author page",
-    h1: "Editorial Team",
+      "Editorial and delivery entity for Flowvory's founder-led audit, trust, and methodology surfaces.",
+    eyebrow: "Team",
+    h1: "Flowvory Founder Desk",
     answerSummary:
-      "The editorial team maintains methodology, policy alignment, and factual consistency across the AI visibility content system.",
+      "The public audit surfaces are maintained as founder-led delivery pages rather than as a scaled editorial content program.",
     intro:
-      "Author pages strengthen accountability by giving public content a clear maintainer and a stable entity for structured data.",
+      "This author surface exists so public pages can link to a stable delivery entity without implying a broader editorial newsroom or fake team scale.",
     updatedAt: "2026-05-10",
     reviewedAt: "2026-05-10",
-    author: editorialAuthor,
-    facts: [
-      {
-        label: "Scope",
-        value: "Comparison, trust, and pricing content",
-        detail: "The team reviews answer blocks, FAQs, and methodology for factual consistency.",
-      },
-      sharedFacts.evidence,
-      sharedFacts.update,
-    ],
+    author: founderDeskAuthor,
+    facts: [sharedFacts.delivery, sharedFacts.audience, sharedFacts.access],
     sections: [
       {
-        title: "Editorial responsibilities",
+        title: "Role of this surface",
         paragraphs: [
-          "The team maintains public methodology, policy alignment, and claim discipline across the AI visibility page system.",
+          "The Founder Desk maintains the public explanation of the audit offer, trust posture, and delivery method.",
+          "It signals accountable ownership for the current public surfaces without inventing a larger editorial or customer-success structure than the company actually has today.",
         ],
       },
     ],
     faq: [
       {
-        question: "Why include an author page?",
+        question: "Why publish an author or owner surface at all?",
         answer:
-          "It creates a stable editorial entity that can be linked from page templates and represented in structured data.",
+          "It creates a stable entity reference for trust, methodology, and sample-deliverable pages while keeping the public story founder-led and accountable.",
       },
     ],
     relatedLinks: [
-      { href: "/methodology", label: "Methodology" },
       { href: "/trust", label: "Trust center" },
-      { href: "/compare/best-vin-decoder", label: "Best VIN decoder guide" },
+      { href: "/methodology", label: "Methodology" },
+      { href: "/sample-audit", label: "Sample audit" },
     ],
-    primaryCta: { href: "/methodology", label: "Review methodology" },
+    primaryCta: { href: "/trust", label: "Open the trust center" },
+    indexable: false,
   },
 ];
 
@@ -750,12 +427,7 @@ export function getAiVisibilityPage(pathname: string) {
 
 export function getCoreAiVisibilityPages() {
   return aiVisibilityPages.filter((page) =>
-    [
-      "/compare/best-vin-decoder",
-      "/trust/is-epicvin-legit",
-      "/compare/epicvin-vs-carfax",
-      "/pricing/cheap-vin-check",
-    ].includes(page.pathname),
+    ["/sample-audit", "/methodology", "/trust", "/help/faq"].includes(page.pathname),
   );
 }
 
@@ -783,6 +455,13 @@ export function buildPageMetadata(page: AiVisibilityPage): Metadata {
     alternates: {
       canonical,
     },
+    robots:
+      page.indexable === false
+        ? {
+            index: false,
+            follow: false,
+          }
+        : undefined,
     openGraph: {
       title: page.title,
       description: page.description,
@@ -822,16 +501,7 @@ export function buildJsonLd(page: AiVisibilityPage) {
       url: siteConfig.siteUrl,
       name: siteConfig.name,
       description: siteConfig.description,
-      inLanguage: "en-US",
-    },
-    {
-      "@context": "https://schema.org",
-      "@type": "Person",
-      "@id": `${authorUrl}#person`,
-      name: page.author.name,
-      jobTitle: page.author.role,
-      url: authorUrl,
-      worksFor: {
+      publisher: {
         "@id": `${siteConfig.siteUrl}#organization`,
       },
     },
@@ -839,31 +509,25 @@ export function buildJsonLd(page: AiVisibilityPage) {
       "@context": "https://schema.org",
       "@type": pageType,
       "@id": `${pageUrl}#page`,
+      url: pageUrl,
       name: page.title,
       headline: page.h1,
       description: page.description,
-      url: pageUrl,
       dateModified: page.updatedAt,
-      datePublished: page.updatedAt,
+      datePublished: page.reviewedAt,
       inLanguage: "en-US",
       isPartOf: {
         "@id": `${siteConfig.siteUrl}#website`,
       },
-      about: {
-        "@id": `${siteConfig.siteUrl}#organization`,
-      },
       author: {
-        "@id": `${authorUrl}#person`,
+        "@type": "Person",
+        name: page.author.name,
+        url: authorUrl,
       },
-      publisher: {
-        "@id": `${siteConfig.siteUrl}#organization`,
-      },
-      mainEntityOfPage: pageUrl,
     },
     {
       "@context": "https://schema.org",
       "@type": "BreadcrumbList",
-      "@id": `${pageUrl}#breadcrumbs`,
       itemListElement: breadcrumbs.map((item, index) => ({
         "@type": "ListItem",
         position: index + 1,
@@ -877,7 +541,6 @@ export function buildJsonLd(page: AiVisibilityPage) {
     graph.push({
       "@context": "https://schema.org",
       "@type": "FAQPage",
-      "@id": `${pageUrl}#faq`,
       mainEntity: page.faq.map((item) => ({
         "@type": "Question",
         name: item.question,

@@ -13,6 +13,7 @@ For repository-wide documentation placement and worker handling rules, see [../s
 - Daily cron, backups, and health checks are required operating controls, not optional cleanup work.
 - Secrets live in `.env.production` on the server and must never be committed to git.
 - SSH access must go through the hardened non-root admin path defined in `docs/runbooks/vps-access-hardening.md`.
+- Production releases use immutable directories under `VPS_APP_DIR/releases` with `VPS_APP_DIR/current` pointing at the active release.
 - Sensitive operator notes, deploy transcripts, and incident scratchpads belong in ignored local paths such as `ops/local/` or `private/`, not in tracked docs.
 
 ## Ownership
@@ -30,7 +31,7 @@ If one person holds multiple roles, they still follow the same checkpoints.
 1. Confirm the change has a tracked issue and a rollback plan.
 2. Review whether the change affects schema, cron behavior, secrets, or reverse proxy config.
 3. Take or verify a current backup before high-risk deploys.
-4. Deploy with `docker compose --env-file .env.production -f docker-compose.prod.yml up -d --build`.
+4. Deploy through the GitHub `Deploy VPS` workflow so the server receives a new immutable release bundle.
 5. Run shallow and deep health checks.
 6. Check logs for the app and database.
 7. Record the deploy result in the issue before closing it.

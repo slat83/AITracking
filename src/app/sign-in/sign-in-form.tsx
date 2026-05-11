@@ -8,6 +8,7 @@ export function SignInForm() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   return (
     <form
@@ -38,15 +39,41 @@ export function SignInForm() {
     >
       <label className="field">
         <span>Email</span>
-        <input name="email" type="email" placeholder="admin@example.com" required />
+        <input
+          name="email"
+          type="email"
+          placeholder="name@brand.com"
+          autoComplete="username"
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
+          required
+        />
       </label>
       <label className="field">
         <span>Password</span>
-        <input name="password" type="password" placeholder="change-me-now" required />
+        <div className="passwordField">
+          <input
+            name="password"
+            type={showPassword ? "text" : "password"}
+            placeholder="Your workspace password"
+            autoComplete="current-password"
+            required
+          />
+          <button
+            className="passwordToggle"
+            type="button"
+            onClick={() => setShowPassword((current) => !current)}
+            aria-label={showPassword ? "Hide password" : "Show password"}
+            aria-pressed={showPassword}
+          >
+            {showPassword ? "Hide" : "Show"}
+          </button>
+        </div>
       </label>
       {error ? <p style={{ color: "#b91c1c", margin: 0 }}>{error}</p> : null}
       <button className="button buttonPrimary" type="submit" disabled={pending}>
-        {pending ? "Signing in..." : "Continue"}
+        {pending ? "Signing in..." : "Enter workspace"}
       </button>
     </form>
   );

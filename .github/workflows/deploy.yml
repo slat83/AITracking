@@ -29,7 +29,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Configure SSH
         shell: bash
@@ -68,7 +68,9 @@ jobs:
           fi
 
           release_id="${GITHUB_SHA}"
-          archive_path="/tmp/content-ops-${release_id}.tgz"
+          app_version="$(node -p "require('./package.json').version")"
+          build_time="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+          archive_path="/tmp/flowvory-${release_id}.tgz"
           tar \
             --exclude=.git \
             --exclude=node_modules \
@@ -81,7 +83,7 @@ jobs:
             -o UserKnownHostsFile=~/.ssh/known_hosts \
             -P "${VPS_PORT}" \
             "${archive_path}" \
-            "${VPS_USER}@${VPS_HOST}:/tmp/content-ops-release.tgz"
+            "${VPS_USER}@${VPS_HOST}:/tmp/flowvory-release.tgz"
 
           remote_output="$(
             ssh \
@@ -90,7 +92,7 @@ jobs:
               -o UserKnownHostsFile=~/.ssh/known_hosts \
               -p "${VPS_PORT}" \
               "${VPS_USER}@${VPS_HOST}" \
-              "APP_DIR='${VPS_APP_DIR}' RELEASE_ID='${release_id}' bash -s" <<'EOF'
+              "APP_DIR='${VPS_APP_DIR}' RELEASE_ID='${release_id}' APP_VERSION='${app_version}' APP_BUILD_TIME='${build_time}' bash -s" <<'EOF'
           set -euo pipefail
 
           shared_env="${APP_DIR}/shared/.env.production"
@@ -104,7 +106,7 @@ jobs:
           mkdir -p "${APP_DIR}/releases"
           rm -rf "${release_dir}"
           mkdir -p "${release_dir}"
-          tar -xzf /tmp/content-ops-release.tgz -C "${release_dir}"
+          tar -xzf /tmp/flowvory-release.tgz -C "${release_dir}"
           ln -sfn "${shared_env}" "${release_dir}/.env.production"
           ln -sfn "${release_dir}" "${APP_DIR}/current"
 
@@ -112,6 +114,10 @@ jobs:
 
           deployed_sha="${RELEASE_ID}"
           echo "DEPLOYED_SHA=${deployed_sha}"
+          export APP_VERSION
+          export APP_RELEASE_ID="${RELEASE_ID}"
+          export APP_GIT_SHA="${RELEASE_ID}"
+          export APP_BUILD_TIME
 
           docker compose --env-file "${shared_env}" -f docker-compose.prod.yml up -d --build --remove-orphans
 
