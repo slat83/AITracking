@@ -265,6 +265,7 @@ export function FounderWorkspace({
   const activeRequest = pilot.currentRequest ?? "No open founder request.";
   const primaryContact = pilot.contacts.find((contact) => contact.isPrimary) ?? null;
   const collaboratorCount = pilot.contacts.filter((contact) => !contact.isPrimary).length;
+  const isOnboardingOpen = !pilot.onboardingCompletedAt;
 
   return (
     <main className="shell dashboard workspacePage">
@@ -283,7 +284,10 @@ export function FounderWorkspace({
           </div>
         </div>
         <nav className="workspaceNav card" aria-label="Founder workspace navigation">
-          <a className="workspaceNavLink workspaceNavLinkActive" href="#overview">Overview</a>
+          <a className="workspaceNavLink workspaceNavLinkActive" href={isOnboardingOpen ? "#onboarding-guide" : "#overview"}>
+            {isOnboardingOpen ? "Onboarding guide" : "Overview"}
+          </a>
+          {isOnboardingOpen ? <a className="workspaceNavLink" href="#overview">Overview</a> : null}
           <a className="workspaceNavLink" href="#inputs">Inputs</a>
           <a className="workspaceNavLink" href="#findings">Findings</a>
           <a className="workspaceNavLink" href="#action-plan">Action plan</a>
@@ -294,6 +298,42 @@ export function FounderWorkspace({
 
       {error ? <section className="card dashboardCard workflowMessage workflowMessageError">{error}</section> : null}
       {notice ? <section className="card dashboardCard workflowMessage workflowMessageNotice">{notice}</section> : null}
+
+      {isOnboardingOpen ? (
+        <section className="card workspacePanel workspaceDetailPanel" id="onboarding-guide" style={{ marginBottom: 20 }}>
+          <section className="workspaceSection">
+            <div className="workspaceSectionTitleRow">
+              <div>
+                <div className="eyebrow">Onboarding guide</div>
+                <h2 style={{ margin: "14px 0 0" }}>Complete these steps to start your audit</h2>
+              </div>
+              <span className="pill">{readinessLabel}</span>
+            </div>
+            <p className="muted">
+              Work through the steps below, then save the inputs form. Once the required steps are complete,
+              Flowvory can move this workspace to the audit queue.
+            </p>
+            <div className="buttonRow" style={{ marginTop: 0 }}>
+              <a className="button buttonPrimary" href="#inputs">Start onboarding form</a>
+              <a className="button buttonSecondary" href="#overview">See workspace status</a>
+            </div>
+            <div className="workspaceChecklist">
+              {checklist.items.map((item, index) => (
+                <article className="workspaceChecklistItem" key={`guide-${item.title}`}>
+                  <div className="workspaceChecklistHeader">
+                    <div>
+                      <span className="metaLabel">Step {index + 1}</span>
+                      <p style={{ marginTop: 8, fontSize: "1.1rem" }}><strong>{item.title}</strong></p>
+                      <p className="workspaceChecklistMeta">{item.detail}</p>
+                    </div>
+                    <span className={`workspaceToneBadge workspaceToneBadge${item.tone}`}>{item.state}</span>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+        </section>
+      ) : null}
 
       <section className="statsGrid dashboardHeader workspaceStats" id="overview">
         <article className="card dashboardCard">
@@ -333,15 +373,16 @@ export function FounderWorkspace({
         <section className="card workspacePanel workspaceDetailPanel">
           <section className="workspaceSection">
             <div className="workspaceSectionTitleRow">
-              <h3>Onboarding checklist</h3>
+              <h3>{isOnboardingOpen ? "Onboarding checklist" : "Completed onboarding checklist"}</h3>
               <span className="pill">{readinessLabel}</span>
             </div>
             <div className="workspaceChecklist">
-              {checklist.items.map((item) => (
+              {checklist.items.map((item, index) => (
                 <article className="workspaceChecklistItem" key={item.title}>
                   <div className="workspaceChecklistHeader">
                     <div>
-                      <strong>{item.title}</strong>
+                      <span className="metaLabel">Step {index + 1}</span>
+                      <p style={{ marginTop: 8 }}><strong>{item.title}</strong></p>
                       <p className="workspaceChecklistMeta">{item.detail}</p>
                     </div>
                     <span className={`workspaceToneBadge workspaceToneBadge${item.tone}`}>{item.state}</span>
@@ -379,8 +420,16 @@ export function FounderWorkspace({
 
           <section className="workspaceSection" id="inputs">
             <div className="workspaceSectionTitleRow">
-              <h3>Inputs</h3>
+              <h3>{isOnboardingOpen ? "Onboarding form" : "Inputs"}</h3>
             </div>
+            <article className="workspaceInlineCard">
+              <span className="metaLabel">{isOnboardingOpen ? "How to complete onboarding" : "Source inputs"}</span>
+              <p>
+                {isOnboardingOpen
+                  ? "Fill in the form from top to bottom, then save. Brand basics, priority surfaces, competitor context, and the core business question should all be complete before the audit begins."
+                  : "These are the source inputs Flowvory is currently using for your audit and delivery plan."}
+              </p>
+            </article>
             <form action={saveFounderOnboardingAction} className="stack">
               <input name="pilotId" type="hidden" value={pilot.id} />
               <div className="workflowFormGrid">
