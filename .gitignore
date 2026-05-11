@@ -2,7 +2,17 @@
 node_modules
 .env
 .env.local
+.env.production
+.env.*.local
 coverage
 dist
 *.tsbuildinfo
 *.log
+backups/
+private/*
+!private/.gitkeep
+ops/local/*
+!ops/local/.gitkeep
+*.pem
+*.key
+*.p12

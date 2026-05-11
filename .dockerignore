@@ -1,0 +1,14 @@
+node_modules
+.next
+.git
+.github
+coverage
+backups
+tmp
+*.log
+docker-compose*.yml
+.env
+.env.production
+private
+ops/local
+plans

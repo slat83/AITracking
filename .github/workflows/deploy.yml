@@ -1,0 +1,143 @@
+name: Deploy VPS
+
+on:
+  workflow_run:
+    workflows:
+      - CI
+    types:
+      - completed
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (
+        github.event.workflow_run.conclusion == 'success' &&
+        github.event.workflow_run.event == 'push' &&
+        github.event.workflow_run.head_branch == 'main'
+      )
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure SSH
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "${{ secrets.VPS_SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "${{ secrets.VPS_SSH_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+
+      - name: Deploy application on VPS
+        id: deploy
+        shell: bash
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_PORT: ${{ secrets.VPS_PORT }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_APP_DIR: ${{ secrets.VPS_APP_DIR }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${VPS_USER}" ]; then
+            echo "VPS_USER is required." >&2
+            exit 1
+          fi
+
+          if [ "${VPS_USER}" = "root" ]; then
+            echo "Refusing to deploy over the deprecated root SSH path. Set VPS_USER to the hardened non-root admin user." >&2
+            exit 1
+          fi
+
+          if [ -z "${VPS_PORT}" ]; then
+            VPS_PORT=22
+          fi
+
+          release_id="${GITHUB_SHA}"
+          archive_path="/tmp/content-ops-${release_id}.tgz"
+          tar \
+            --exclude=.git \
+            --exclude=node_modules \
+            --exclude=.next \
+            -czf "${archive_path}" .
+
+          scp \
+            -o BatchMode=yes \
+            -o StrictHostKeyChecking=yes \
+            -o UserKnownHostsFile=~/.ssh/known_hosts \
+            -P "${VPS_PORT}" \
+            "${archive_path}" \
+            "${VPS_USER}@${VPS_HOST}:/tmp/content-ops-release.tgz"
+
+          remote_output="$(
+            ssh \
+              -o BatchMode=yes \
+              -o StrictHostKeyChecking=yes \
+              -o UserKnownHostsFile=~/.ssh/known_hosts \
+              -p "${VPS_PORT}" \
+              "${VPS_USER}@${VPS_HOST}" \
+              "APP_DIR='${VPS_APP_DIR}' RELEASE_ID='${release_id}' bash -s" <<'EOF'
+          set -euo pipefail
+
+          shared_env="${APP_DIR}/shared/.env.production"
+          release_dir="${APP_DIR}/releases/${RELEASE_ID}"
+
+          if [ ! -f "${shared_env}" ]; then
+            echo "Missing production env file: ${shared_env}" >&2
+            exit 1
+          fi
+
+          mkdir -p "${APP_DIR}/releases"
+          rm -rf "${release_dir}"
+          mkdir -p "${release_dir}"
+          tar -xzf /tmp/content-ops-release.tgz -C "${release_dir}"
+          ln -sfn "${shared_env}" "${release_dir}/.env.production"
+          ln -sfn "${release_dir}" "${APP_DIR}/current"
+
+          cd "${APP_DIR}/current"
+
+          deployed_sha="${RELEASE_ID}"
+          echo "DEPLOYED_SHA=${deployed_sha}"
+
+          docker compose --env-file "${shared_env}" -f docker-compose.prod.yml up -d --build
+          curl -fsS http://127.0.0.1:3000/api/health?deep=1 >/dev/null
+
+          echo "DEPLOY_STATUS=success"
+          EOF
+          )"
+
+          printf '%s\n' "${remote_output}"
+
+          deployed_sha="$(printf '%s\n' "${remote_output}" | sed -n 's/^DEPLOYED_SHA=//p' | tail -n 1)"
+
+          if [ -z "${deployed_sha}" ]; then
+            echo "Deploy completed but did not report a commit SHA." >&2
+            exit 1
+          fi
+
+          echo "deployed_sha=${deployed_sha}" >> "${GITHUB_OUTPUT}"
+
+      - name: Publish deploy summary
+        shell: bash
+        run: |
+          {
+            echo "## VPS Deploy"
+            echo
+            echo "- Commit: \`${{ steps.deploy.outputs.deployed_sha }}\`"
+            echo "- Trigger: \`${{ github.event_name }}\`"
+            echo "- Workflow run: \`${{ github.run_id }}\`"
+          } >> "${GITHUB_STEP_SUMMARY}"
