@@ -1,6 +1,6 @@
 import { VisibilityEventType, type Prisma } from "@prisma/client";
 
-import { aiVisibilityPages } from "@/content/ai-visibility";
+import { aiVisibilityPages, resolveAiVisibilityPathname } from "@/content/ai-visibility";
 import { prisma } from "@/server/db/client";
 import { enqueueJob } from "@/server/jobs";
 
@@ -44,12 +44,11 @@ function getNextUtcMidnight(value: Date) {
   return getEndOfUtcDay(value);
 }
 
-function normalizePathname(pathname: string) {
-  if (!pathname.startsWith("/")) {
-    return `/${pathname}`;
+export class UnknownAiVisibilityPathnameError extends Error {
+  constructor(pathname: string) {
+    super(`Unknown AI visibility pathname: ${pathname}`);
+    this.name = "UnknownAiVisibilityPathnameError";
   }
-
-  return pathname;
 }
 
 function getKnownPageTitle(pathname: string) {
@@ -57,11 +56,17 @@ function getKnownPageTitle(pathname: string) {
 }
 
 export async function trackVisibilityEvent(input: TrackVisibilityEventInput) {
+  const pathname = resolveAiVisibilityPathname(input.pathname);
+
+  if (!pathname) {
+    throw new UnknownAiVisibilityPathnameError(input.pathname);
+  }
+
   return prisma.visibilityEvent.create({
     data: {
-      pathname: normalizePathname(input.pathname),
+      pathname,
       eventType: input.eventType,
-      pageTitle: input.pageTitle ?? getKnownPageTitle(normalizePathname(input.pathname)),
+      pageTitle: input.pageTitle ?? getKnownPageTitle(pathname),
       ctaLabel: input.ctaLabel ?? null,
       ctaHref: input.ctaHref ?? null,
       sessionId: input.sessionId,

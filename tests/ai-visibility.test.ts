@@ -5,6 +5,7 @@ import {
   buildBreadcrumbs,
   buildJsonLd,
   getCoreAiVisibilityPages,
+  resolveAiVisibilityPathname,
 } from "@/content/ai-visibility";
 
 describe("AI visibility content model", () => {
@@ -22,6 +23,14 @@ describe("AI visibility content model", () => {
       { name: "Home", href: "/" },
       { name: "Sample AI Visibility Audit", href: "/sample-audit" },
     ]);
+  });
+
+  it("normalizes only current AI visibility pathnames", () => {
+    expect(resolveAiVisibilityPathname("sample-audit")).toBe("/sample-audit");
+    expect(resolveAiVisibilityPathname("/compare/epicvin-vs-carfax")).toBe(
+      "/compare/epicvin-vs-carfax",
+    );
+    expect(resolveAiVisibilityPathname("/pricing/cheap-vin-check")).toBeNull();
   });
 
   it("generates faq schema from visible faq content", () => {

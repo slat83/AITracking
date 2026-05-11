@@ -2,7 +2,7 @@ import { VisibilityEventType } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { trackVisibilityEvent } from "@/server/analytics/visibility";
+import { trackVisibilityEvent, UnknownAiVisibilityPathnameError } from "@/server/analytics/visibility";
 
 export const runtime = "nodejs";
 
@@ -31,6 +31,13 @@ export async function POST(request: Request) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { ok: false, error: "Invalid analytics payload", issues: error.flatten() },
+        { status: 400 },
+      );
+    }
+
+    if (error instanceof UnknownAiVisibilityPathnameError) {
+      return NextResponse.json(
+        { ok: false, error: "Unknown AI visibility pathname" },
         { status: 400 },
       );
     }

@@ -84,6 +84,133 @@ const sharedFacts = {
 
 export const aiVisibilityPages: AiVisibilityPage[] = [
   {
+    pathname: "/compare/epicvin-vs-carfax",
+    kind: "article",
+    title: "EpicVIN vs Carfax Comparison Guide",
+    description:
+      "A criteria-led comparison for budget-minded used-car buyers evaluating EpicVIN vs Carfax without blanket winner claims.",
+    eyebrow: "Comparison guide",
+    h1: "EpicVIN vs Carfax: what budget-minded used-car buyers should compare first",
+    answerSummary:
+      "EpicVIN can be a sensible option for some budget-sensitive buyers, but the better choice depends on price, methodology, trust signals, sample output clarity, support visibility, and the buyer's comfort with a less familiar default.",
+    intro:
+      "This guide is built to help buyers compare two known vehicle-history report options using explicit criteria instead of hype. It is not a universal-winner page, and it should be read alongside the methodology, trust, and sample-report surfaces that explain how the evaluation frame was chosen.",
+    updatedAt: "2026-05-11",
+    reviewedAt: "2026-05-11",
+    author: founderDeskAuthor,
+    facts: [
+      {
+        label: "Decision frame",
+        value: "Fit and tradeoffs",
+        detail: "The page is designed to help a buyer compare scenarios rather than declare one provider best for everyone.",
+      },
+      {
+        label: "Core criteria",
+        value: "Price, methodology, trust, support",
+        detail: "These are the first factors a buyer should compare before paying for any report.",
+      },
+      {
+        label: "Best fit",
+        value: "Budget-minded evaluation",
+        detail: "The guide is most useful when a buyer wants a lower-cost option but still wants a structured way to compare providers.",
+      },
+    ],
+    sections: [
+      {
+        title: "What to compare besides price",
+        paragraphs: [
+          "Price matters, especially for buyers explicitly looking for a lower-cost paid alternative, but it should not be the only filter. A fair comparison also needs to explain methodology, trust, support visibility, and how easy it is to understand the sample output before purchase.",
+          "That is why this page keeps the decision criteria visible instead of treating brand familiarity as a substitute for evaluation.",
+        ],
+        bullets: [
+          "Price and budget fit.",
+          "Brand familiarity and trust default.",
+          "Report-evaluation methodology.",
+          "Scenario fit by buyer type.",
+          "Limitations and edge cases.",
+          "Proof transparency.",
+        ],
+      },
+      {
+        title: "When EpicVIN may be a reasonable option",
+        paragraphs: [
+          "EpicVIN may be worth evaluating when the buyer is explicitly price-sensitive, still wants a paid report, and is willing to compare tools through a visible method instead of defaulting to the most familiar brand name.",
+        ],
+        bullets: [
+          "You want a budget-oriented option and are willing to compare tradeoffs before purchasing.",
+          "You want the page to explain methodology, trust signals, and support visibility rather than rely on brand familiarity alone.",
+          "You are comfortable reviewing sample output and limitations before deciding.",
+        ],
+      },
+      {
+        title: "When Carfax may be the safer fit",
+        paragraphs: [
+          "Carfax may be the better fit for buyers who prioritize familiarity, want the most recognized default in the category, or simply do not want to spend time evaluating tradeoffs across providers.",
+        ],
+        bullets: [
+          "You prefer the best-known default brand and are less sensitive to price.",
+          "You do not want to evaluate multiple criteria before buying.",
+          "You prefer a familiar default even if a lower-cost alternative exists.",
+        ],
+      },
+      {
+        title: "Methodology and fairness notes",
+        paragraphs: [
+          "This guide is intentionally narrow. It avoids blanket superiority claims and keeps the decision user-centered and conditional.",
+          "A fair comparison should acknowledge that different buyers value familiarity, trust, budget, and process differently. If a claim cannot be verified on the page, it should be cut rather than softened into vague promotional language.",
+        ],
+        bullets: [
+          "Do not assume one option is always better across every scenario.",
+          "Do not reduce the choice to price alone.",
+          "Review methodology, trust context, and limitations before buying from either provider.",
+          "Brand familiarity can matter for some buyers, and that is a legitimate part of the decision.",
+        ],
+      },
+      {
+        title: "What to review before buying any report",
+        paragraphs: [
+          "Before paying for any vehicle-history report, review the criteria table, scan the methodology notes, and check whether the trust and support surfaces answer the practical questions you care about.",
+        ],
+        bullets: [
+          "How the comparison criteria were chosen.",
+          "Whether the trust and support path is clear.",
+          "Whether the sample output is legible and useful.",
+          "Whether the page states visible limitations instead of hiding them.",
+        ],
+      },
+    ],
+    faq: [
+      {
+        question: "Is EpicVIN a good alternative to Carfax?",
+        answer:
+          "It can be for some budget-sensitive buyers, but the page is meant to help with a fit-and-tradeoff decision rather than declare a universal winner.",
+      },
+      {
+        question: "What should I compare besides price?",
+        answer:
+          "Review methodology, trust signals, sample output clarity, support visibility, buyer-fit guidance, and stated limitations before purchasing any report.",
+      },
+      {
+        question: "When is Carfax the better fit?",
+        answer:
+          "Carfax may be the better fit when the buyer strongly prefers the familiar default brand or does not want to spend time evaluating multiple criteria.",
+      },
+      {
+        question: "What should I review before buying any report?",
+        answer:
+          "Read the methodology notes, look for trust and support clarity, check the sample output, and confirm that the page keeps limitations visible.",
+      },
+    ],
+    relatedLinks: [
+      { href: "/methodology", label: "Review the methodology" },
+      { href: "/trust", label: "Review trust details" },
+      { href: "/sample-audit", label: "See the sample structure" },
+      { href: "/help/faq", label: "Read the FAQ" },
+    ],
+    primaryCta: { href: "/methodology", label: "Review the methodology" },
+    secondaryCta: { href: "/trust", label: "Review trust details" },
+  },
+  {
     pathname: "/trust",
     kind: "webpage",
     title: "Flowvory Trust Center",
@@ -421,8 +548,13 @@ export const aiVisibilityPages: AiVisibilityPage[] = [
 
 const pageLookup = new Map(aiVisibilityPages.map((page) => [page.pathname, page]));
 
+export function resolveAiVisibilityPathname(pathname: string) {
+  const normalizedPathname = pathname.startsWith("/") ? pathname : `/${pathname}`;
+  return pageLookup.has(normalizedPathname) ? normalizedPathname : null;
+}
+
 export function getAiVisibilityPage(pathname: string) {
-  return pageLookup.get(pathname);
+  return pageLookup.get(resolveAiVisibilityPathname(pathname) ?? pathname);
 }
 
 export function getCoreAiVisibilityPages() {
