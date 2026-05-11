@@ -27,7 +27,7 @@ export const pilotOnboardingSchema = z.object({
   storePlatform: z.string().trim().optional().transform(emptyToUndefined),
   targetGeography: z.string().trim().optional().transform(emptyToUndefined),
   prioritySurfaces: z.array(nonEmptyTrimmed).min(1, "Add at least one priority surface."),
-  topCompetitors: z.array(nonEmptyTrimmed).default([]),
+  topCompetitors: z.array(nonEmptyTrimmed).min(1, "Add at least one competitor or substitute."),
   businessQuestion: nonEmptyTrimmed,
   supportingContext: z.string().trim().optional().transform(emptyToUndefined),
 });
@@ -118,4 +118,3 @@ export function mapInvoiceLifecycle(input: {
 
   return input.status;
 }
-

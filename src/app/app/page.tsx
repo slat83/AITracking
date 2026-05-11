@@ -10,11 +10,11 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { AppShellNav } from "@/components/app-shell-nav";
+import { FounderWorkspace } from "@/components/founder-workspace";
 import { escalateScenarioAction, reassignScenarioOwnerAction } from "@/app/app/scenario-actions";
 import { requireUser } from "@/server/auth";
 import { prisma } from "@/server/db/client";
-import { saveFounderOnboardingAction } from "@/app/app/founder-actions";
-import { resolvePilotCommercialState, resolvePilotInvoiceStatus } from "@/server/pilots/commercial";
+import { resolvePilotCommercialState } from "@/server/pilots/commercial";
 import {
   WORKSPACE_FRESHNESS_WINDOWS,
   WORKSPACE_SORTS,
@@ -282,7 +282,6 @@ export default async function WorkspacePage({ searchParams }: PageProps) {
 
     if (founderMembership) {
       const pilot = founderMembership.pilot;
-      const isOnboardingComplete = Boolean(pilot.onboardingCompletedAt);
       const commercial = resolvePilotCommercialState(pilot, session.user.id);
       const workspaceAccess = commercial.workspaceAccess;
 
@@ -290,203 +289,15 @@ export default async function WorkspacePage({ searchParams }: PageProps) {
         redirect(`/sign-in?error=${encodeURIComponent(workspaceAccess?.reason ?? "Workspace access is unavailable.")}`);
       }
 
-      const openInvoice = commercial.billing.activeInvoice;
-      const founderAction =
-        pilot.status === PilotStatus.WAITING_ON_FOUNDER
-          ? pilot.currentRequest ?? "Flowvory needs an update from you before the audit can continue."
-          : isOnboardingComplete
-            ? "No action required right now."
-            : "Complete the onboarding inputs so the audit can begin.";
-
       return (
-        <main className="shell dashboard workspacePage">
-          <header className="topbar workspaceHeader">
-            <div className="topbarInner workspaceHeaderInner">
-              <div>
-                <div className="eyebrow">Founder workspace</div>
-                <h1 style={{ fontSize: "2.5rem", margin: "12px 0 0" }}>{pilot.brandName}</h1>
-                <p className="muted workspaceIntro">
-                  This workspace tracks your Flowvory pilot status, required inputs, and delivered outputs.
-                </p>
-              </div>
-              <div className="workspaceHeaderActions">
-                <div className="pill">{formatEnumLabel(pilot.status)}</div>
-              </div>
-            </div>
-            <nav className="workspaceNav card" aria-label="Founder workspace navigation">
-              <a className="workspaceNavLink workspaceNavLinkActive" href="#overview">Overview</a>
-              <a className="workspaceNavLink" href="#inputs">Inputs</a>
-              <a className="workspaceNavLink" href="#findings">Findings</a>
-              <a className="workspaceNavLink" href="#action-plan">Action plan</a>
-            </nav>
-          </header>
-
-          {error ? (
-            <section className="card dashboardCard workflowMessage workflowMessageError">{error}</section>
-          ) : null}
-          {notice ? (
-            <section className="card dashboardCard workflowMessage workflowMessageNotice">{notice}</section>
-          ) : null}
-
-          <section className="statsGrid dashboardHeader workspaceStats" id="overview">
-            <article className="card dashboardCard">
-              <p className="muted">Current stage</p>
-              <p className="workspaceStatLabel">{formatEnumLabel(pilot.status)}</p>
-            </article>
-            <article className="card dashboardCard">
-              <p className="muted">Next milestone</p>
-              <p className="workspaceStatLabel">{formatDate(pilot.targetDeliveryDate)}</p>
-            </article>
-            <article className="card dashboardCard">
-              <p className="muted">Required action</p>
-              <p className="workspaceStatLabel">{founderAction}</p>
-            </article>
-            <article className="card dashboardCard">
-              <p className="muted">Manual invoice</p>
-              <p className="workspaceStatLabel">
-                {openInvoice
-                  ? `${formatEnumLabel(openInvoice.status)} · $${(openInvoice.amountCents / 100).toFixed(2)}`
-                  : "No open invoice"}
-              </p>
-            </article>
-          </section>
-
-          <section className="workspaceQuestionGrid">
-            <article className="workspaceQuestionCard">
-              <span className="metaLabel">What Flowvory is doing now</span>
-              <p>{pilot.currentStageNote ?? "The audit team is reviewing your workspace and next milestone."}</p>
-            </article>
-            <article className="workspaceQuestionCard">
-              <span className="metaLabel">What Flowvory needs from you</span>
-              <p>{founderAction}</p>
-            </article>
-            <article className="workspaceQuestionCard">
-              <span className="metaLabel">Primary business question</span>
-              <p>{pilot.businessQuestion}</p>
-            </article>
-          </section>
-
-          <section className="workspaceGrid" id="inputs">
-            <section className="card workspacePanel workspaceDetailPanel">
-              <section className="workspaceSection">
-                <div className="workspaceSectionTitleRow">
-                  <h3>Onboarding inputs</h3>
-                </div>
-                <form action={saveFounderOnboardingAction} className="stack">
-                  <input name="pilotId" type="hidden" value={pilot.id} />
-                  <div className="workflowFormGrid">
-                    <label className="field">
-                      <span>Brand name</span>
-                      <input defaultValue={pilot.brandName} name="brandName" required />
-                    </label>
-                    <label className="field">
-                      <span>Website URL</span>
-                      <input defaultValue={pilot.websiteUrl} name="websiteUrl" required />
-                    </label>
-                    <label className="field">
-                      <span>Store platform</span>
-                      <input defaultValue={pilot.storePlatform ?? ""} name="storePlatform" />
-                    </label>
-                    <label className="field">
-                      <span>Target geography</span>
-                      <input defaultValue={pilot.targetGeography ?? ""} name="targetGeography" />
-                    </label>
-                    <label className="field workflowFieldSpan2">
-                      <span>Priority surfaces</span>
-                      <textarea defaultValue={pilot.prioritySurfaces.join("\n")} name="prioritySurfaces" rows={3} />
-                    </label>
-                    <label className="field workflowFieldSpan2">
-                      <span>Top competitors or substitutes</span>
-                      <textarea defaultValue={pilot.topCompetitors.join("\n")} name="topCompetitors" rows={3} />
-                    </label>
-                    <label className="field workflowFieldSpan2">
-                      <span>Primary business question</span>
-                      <textarea defaultValue={pilot.businessQuestion} name="businessQuestion" rows={3} required />
-                    </label>
-                    <label className="field workflowFieldSpan2">
-                      <span>Supporting context</span>
-                      <textarea defaultValue={pilot.supportingContext ?? ""} name="supportingContext" rows={4} />
-                    </label>
-                  </div>
-                  <div className="buttonRow">
-                    <button className="button buttonPrimary" type="submit">
-                      Save inputs
-                    </button>
-                  </div>
-                </form>
-              </section>
-
-              <section className="workspaceSection" id="findings">
-                <div className="workspaceSectionTitleRow">
-                  <h3>Findings</h3>
-                </div>
-                <article className="workspaceInlineCard">
-                  <p>{pilot.findingsSummary ?? "Findings will appear here once Flowvory publishes the audit output."}</p>
-                </article>
-              </section>
-
-              <section className="workspaceSection" id="action-plan">
-                <div className="workspaceSectionTitleRow">
-                  <h3>30-day action plan</h3>
-                </div>
-                <article className="workspaceInlineCard">
-                  <p>{pilot.actionPlan ?? "Your action plan will be published here when the audit is delivered."}</p>
-                </article>
-              </section>
-            </section>
-
-            <aside className="card workspacePanel workspaceRail">
-              <section className="workspaceRailSection">
-                <h2>Workspace status</h2>
-                <div className="workspaceList">
-                  <div className="workspaceListRow">
-                    <span>Invite accepted</span>
-                    <span>{formatDate(founderMembership.acceptedAt)}</span>
-                  </div>
-                  <div className="workspaceListRow">
-                    <span>Inputs completed</span>
-                    <span>{formatDate(pilot.onboardingCompletedAt)}</span>
-                  </div>
-                  <div className="workspaceListRow">
-                    <span>Target delivery</span>
-                    <span>{formatDate(pilot.targetDeliveryDate)}</span>
-                  </div>
-                  <div className="workspaceListRow">
-                    <span>Delivered</span>
-                    <span>{formatDate(pilot.deliveredAt)}</span>
-                  </div>
-                </div>
-              </section>
-
-              <section className="workspaceRailSection">
-                <h2>Commercial status</h2>
-                <div className="workspaceList">
-                  <div className="workspaceListRow">
-                    <span>Billing provider</span>
-                    <span>{commercial.billing.provider}</span>
-                  </div>
-                  <div className="workspaceListRow">
-                    <span>Workspace entitlement</span>
-                    <span>{workspaceAccess.source}</span>
-                  </div>
-                  {pilot.invoices.length === 0 ? (
-                    <p className="muted">No invoice has been attached yet.</p>
-                  ) : (
-                    pilot.invoices.map((invoice) => (
-                      <div className="workspaceListRow" key={invoice.id}>
-                        <div>
-                          <strong>{invoice.invoiceNumber}</strong>
-                          <p className="muted">{invoice.description}</p>
-                        </div>
-                        <span className="pill">{formatEnumLabel(resolvePilotInvoiceStatus(invoice))}</span>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </section>
-            </aside>
-          </section>
-        </main>
+        <FounderWorkspace
+          acceptedAt={founderMembership.acceptedAt}
+          billing={commercial.billing}
+          error={error}
+          notice={notice}
+          pilot={pilot}
+          workspaceAccessSource={workspaceAccess.source}
+        />
       );
     }
 
@@ -852,7 +663,7 @@ export default async function WorkspacePage({ searchParams }: PageProps) {
 
               <section className="workspaceSection">
                 <div className="workspaceSectionTitleRow">
-                  <h3>Situation summary</h3>
+                  <h3>Signal summary</h3>
                 </div>
                 <div className="workspaceSummaryGrid">
                   <article className="workspaceInlineCard">
@@ -894,7 +705,7 @@ export default async function WorkspacePage({ searchParams }: PageProps) {
 
               <section className="workspaceSection">
                 <div className="workspaceSectionTitleRow">
-                  <h3>Scenario context</h3>
+                  <h3>Scenario brief</h3>
                 </div>
                 <div className="workspaceContextGrid">
                   <article className="workspaceInlineCard">
@@ -957,7 +768,7 @@ export default async function WorkspacePage({ searchParams }: PageProps) {
 
               <section className="workspaceSection">
                 <div className="workspaceSectionTitleRow">
-                  <h3>Task and artifact lane</h3>
+                  <h3>Execution children</h3>
                 </div>
                 <div className="workspaceLaneGrid">
                   {(["Now", "Waiting", "Done"] as const).map((lane) => {
@@ -1071,7 +882,7 @@ export default async function WorkspacePage({ searchParams }: PageProps) {
                           query: { opportunity: selectedScenario.sourceOpportunity.id },
                         }}
                       >
-                        Review signal intake
+                        Back to intake queue
                       </Link>
                     ) : null}
                     <Link
