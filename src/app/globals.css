@@ -598,6 +598,23 @@ select {
   gap: 12px;
 }
 
+.workspaceChecklistScrollable {
+  max-height: 320px;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+.workspaceChecklistScrollable::-webkit-scrollbar {
+  width: 10px;
+}
+
+.workspaceChecklistScrollable::-webkit-scrollbar-thumb {
+  background: rgba(82, 96, 109, 0.28);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
 .workspaceQueueControls {
   display: grid;
   gap: 14px;

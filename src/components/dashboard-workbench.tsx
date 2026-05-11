@@ -35,11 +35,25 @@ type DashboardSnapshot = {
   answeredPosts: DashboardPostRecord[];
 };
 
+type DashboardSearchState = {
+  keywords: string;
+  threads: string;
+  postsToAnswer: string;
+  answeredPosts: string;
+};
+
 const EMPTY_DASHBOARD: DashboardSnapshot = {
   keywords: [],
   threads: [],
   postsToAnswer: [],
   answeredPosts: [],
+};
+
+const EMPTY_SEARCH_STATE: DashboardSearchState = {
+  keywords: "",
+  threads: "",
+  postsToAnswer: "",
+  answeredPosts: "",
 };
 
 function splitBulkInput(value: string) {
@@ -61,6 +75,44 @@ function formatDateTime(value: string | null) {
     minute: "2-digit",
     timeZone: "UTC",
   });
+}
+
+function normalizeSearchValue(value: string) {
+  return value.trim().toLowerCase();
+}
+
+export function filterKeywords(keywords: DashboardKeywordRecord[], query: string) {
+  const normalizedQuery = normalizeSearchValue(query);
+
+  if (!normalizedQuery) {
+    return keywords;
+  }
+
+  return keywords.filter((keyword) => keyword.keyword.toLowerCase().includes(normalizedQuery));
+}
+
+export function filterThreads(threads: DashboardThreadRecord[], query: string) {
+  const normalizedQuery = normalizeSearchValue(query);
+
+  if (!normalizedQuery) {
+    return threads;
+  }
+
+  return threads.filter((thread) =>
+    [thread.title, thread.url].some((value) => value?.toLowerCase().includes(normalizedQuery)),
+  );
+}
+
+export function filterPosts(posts: DashboardPostRecord[], query: string) {
+  const normalizedQuery = normalizeSearchValue(query);
+
+  if (!normalizedQuery) {
+    return posts;
+  }
+
+  return posts.filter((post) =>
+    [post.title, post.url, post.subreddit, post.author].some((value) => value?.toLowerCase().includes(normalizedQuery)),
+  );
 }
 
 async function readJson<T>(response: Response): Promise<T> {
@@ -113,11 +165,24 @@ export function buildDashboardLoadResult(results: DashboardLoadSections): Dashbo
 
 export function DashboardWorkbench() {
   const [dashboard, setDashboard] = useState<DashboardSnapshot>(EMPTY_DASHBOARD);
+  const [search, setSearch] = useState<DashboardSearchState>(EMPTY_SEARCH_STATE);
   const [keywordInput, setKeywordInput] = useState("");
   const [threadInput, setThreadInput] = useState("");
   const [loading, setLoading] = useState(true);
   const [pendingAction, setPendingAction] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const filteredKeywords = filterKeywords(dashboard.keywords, search.keywords);
+  const filteredThreads = filterThreads(dashboard.threads, search.threads);
+  const filteredPostsToAnswer = filterPosts(dashboard.postsToAnswer, search.postsToAnswer);
+  const filteredAnsweredPosts = filterPosts(dashboard.answeredPosts, search.answeredPosts);
+
+  function updateSearchState(section: keyof DashboardSearchState, value: string) {
+    setSearch((current) => ({
+      ...current,
+      [section]: value,
+    }));
+  }
 
   useEffect(() => {
     let active = true;
@@ -396,13 +461,27 @@ export function DashboardWorkbench() {
               {pendingAction === "keywords" ? "Saving..." : "Add keywords"}
             </button>
           </div>
-          <div className="workspaceChecklist">
+          <label className="field">
+            <span>Search tracked keywords</span>
+            <input
+              aria-label="Search tracked keywords"
+              disabled={loading}
+              onChange={(event) => updateSearchState("keywords", event.target.value)}
+              placeholder="Filter keywords"
+              value={search.keywords}
+            />
+          </label>
+          <div className="workspaceChecklist workspaceChecklistScrollable">
             {dashboard.keywords.length === 0 ? (
               <div className="workspaceEmptyState">
                 <strong>No keywords tracked yet.</strong>
               </div>
+            ) : filteredKeywords.length === 0 ? (
+              <div className="workspaceEmptyState">
+                <strong>No keywords match that search.</strong>
+              </div>
             ) : (
-              dashboard.keywords.map((keyword) => (
+              filteredKeywords.map((keyword) => (
                 <article className="workspaceChecklistItem" key={keyword.id}>
                   <div className="workspaceChecklistHeader">
                     <strong>{keyword.keyword}</strong>
@@ -450,13 +529,27 @@ export function DashboardWorkbench() {
               {pendingAction === "threads" ? "Saving..." : "Add threads"}
             </button>
           </div>
-          <div className="workspaceChecklist">
+          <label className="field">
+            <span>Search tracked threads</span>
+            <input
+              aria-label="Search tracked threads"
+              disabled={loading}
+              onChange={(event) => updateSearchState("threads", event.target.value)}
+              placeholder="Filter threads by title or URL"
+              value={search.threads}
+            />
+          </label>
+          <div className="workspaceChecklist workspaceChecklistScrollable">
             {dashboard.threads.length === 0 ? (
               <div className="workspaceEmptyState">
                 <strong>No threads tracked yet.</strong>
               </div>
+            ) : filteredThreads.length === 0 ? (
+              <div className="workspaceEmptyState">
+                <strong>No threads match that search.</strong>
+              </div>
             ) : (
-              dashboard.threads.map((thread) => (
+              filteredThreads.map((thread) => (
                 <article className="workspaceChecklistItem" key={thread.id}>
                   <div className="workspaceChecklistHeader">
                     <div>
@@ -516,15 +609,31 @@ export function DashboardWorkbench() {
             <article className="workspaceInlineCard">
               <div className="workspaceSectionTitleRow">
                 <h3>Active queue</h3>
-                <span className="pill">{dashboard.postsToAnswer.length}</span>
+                <span className="pill">
+                  {filteredPostsToAnswer.length}/{dashboard.postsToAnswer.length}
+                </span>
               </div>
-              <div className="workspaceChecklist">
+              <label className="field">
+                <span>Search active posts</span>
+                <input
+                  aria-label="Search active posts"
+                  disabled={loading}
+                  onChange={(event) => updateSearchState("postsToAnswer", event.target.value)}
+                  placeholder="Filter by title, URL, subreddit, or author"
+                  value={search.postsToAnswer}
+                />
+              </label>
+              <div className="workspaceChecklist workspaceChecklistScrollable">
                 {dashboard.postsToAnswer.length === 0 ? (
                   <div className="workspaceEmptyState">
                     <strong>No posts waiting for an answer.</strong>
                   </div>
+                ) : filteredPostsToAnswer.length === 0 ? (
+                  <div className="workspaceEmptyState">
+                    <strong>No active posts match that search.</strong>
+                  </div>
                 ) : (
-                  dashboard.postsToAnswer.map((post) => (
+                  filteredPostsToAnswer.map((post) => (
                     <article className="workspaceChecklistItem" key={post.id}>
                       <div className="workspaceChecklistHeader">
                         <div>
@@ -550,15 +659,31 @@ export function DashboardWorkbench() {
             <article className="workspaceInlineCard">
               <div className="workspaceSectionTitleRow">
                 <h3>Answered posts</h3>
-                <span className="pill">{dashboard.answeredPosts.length}</span>
+                <span className="pill">
+                  {filteredAnsweredPosts.length}/{dashboard.answeredPosts.length}
+                </span>
               </div>
-              <div className="workspaceChecklist">
+              <label className="field">
+                <span>Search answered posts</span>
+                <input
+                  aria-label="Search answered posts"
+                  disabled={loading}
+                  onChange={(event) => updateSearchState("answeredPosts", event.target.value)}
+                  placeholder="Filter by title, URL, subreddit, or author"
+                  value={search.answeredPosts}
+                />
+              </label>
+              <div className="workspaceChecklist workspaceChecklistScrollable">
                 {dashboard.answeredPosts.length === 0 ? (
                   <div className="workspaceEmptyState">
                     <strong>No answered posts yet.</strong>
                   </div>
+                ) : filteredAnsweredPosts.length === 0 ? (
+                  <div className="workspaceEmptyState">
+                    <strong>No answered posts match that search.</strong>
+                  </div>
                 ) : (
-                  dashboard.answeredPosts.map((post) => (
+                  filteredAnsweredPosts.map((post) => (
                     <article className="workspaceChecklistItem" key={post.id}>
                       <div className="workspaceChecklistHeader">
                         <div>
