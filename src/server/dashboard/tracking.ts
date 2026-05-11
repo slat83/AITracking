@@ -61,6 +61,39 @@ type KeywordIdentifier = z.infer<typeof trackedKeywordIdentifierSchema>;
 type ThreadIdentifier = z.infer<typeof trackedThreadIdentifierSchema>;
 type PostIdentifier = z.infer<typeof trackedPostIdentifierSchema>;
 
+type SerializedDashboardKeywordRecord = {
+  id: string;
+  keyword: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+type SerializedDashboardThreadRecord = {
+  id: string;
+  url: string;
+  title: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+type SerializedDashboardPostRecord = {
+  id: string;
+  url: string;
+  title: string | null;
+  subreddit: string | null;
+  author: string | null;
+  answeredAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+type DashboardSnapshot = {
+  keywords: SerializedDashboardKeywordRecord[];
+  threads: SerializedDashboardThreadRecord[];
+  postsToAnswer: SerializedDashboardPostRecord[];
+  answeredPosts: SerializedDashboardPostRecord[];
+};
+
 function normalizeKeyword(keyword: string) {
   return keyword.trim().replace(/\s+/g, " ");
 }
@@ -73,12 +106,45 @@ function normalizeOptionalText(value?: string) {
 function normalizeUrl(value: string) {
   const url = new URL(value.trim());
   url.hash = "";
+  url.search = "";
 
   if (url.pathname.length > 1) {
     url.pathname = url.pathname.replace(/\/+$/, "");
   }
 
   return url.toString();
+}
+
+function serializeKeywordRecord(record: TrackedKeyword): SerializedDashboardKeywordRecord {
+  return {
+    id: record.id,
+    keyword: record.keyword,
+    createdAt: record.createdAt.toISOString(),
+    updatedAt: record.updatedAt.toISOString(),
+  };
+}
+
+function serializeThreadRecord(record: TrackedRedditThread): SerializedDashboardThreadRecord {
+  return {
+    id: record.id,
+    url: record.url,
+    title: record.title,
+    createdAt: record.createdAt.toISOString(),
+    updatedAt: record.updatedAt.toISOString(),
+  };
+}
+
+function serializePostRecord(record: TrackedRedditPost): SerializedDashboardPostRecord {
+  return {
+    id: record.id,
+    url: record.url,
+    title: record.title,
+    subreddit: record.subreddit,
+    author: record.author,
+    answeredAt: record.answeredAt?.toISOString() ?? null,
+    createdAt: record.createdAt.toISOString(),
+    updatedAt: record.updatedAt.toISOString(),
+  };
 }
 
 async function ensureDashboardWorkspace(db: DashboardTrackingDb) {
@@ -245,6 +311,21 @@ export async function listTrackedPosts(db: DashboardTrackingDb = prisma) {
   return {
     postsToAnswer,
     answeredPosts,
+  };
+}
+
+export async function getDashboardSnapshot(db: DashboardTrackingDb = prisma): Promise<DashboardSnapshot> {
+  const [keywords, threads, posts] = await Promise.all([
+    listTrackedKeywords(db),
+    listTrackedThreads(db),
+    listTrackedPosts(db),
+  ]);
+
+  return {
+    keywords: keywords.map(serializeKeywordRecord),
+    threads: threads.map(serializeThreadRecord),
+    postsToAnswer: posts.postsToAnswer.map(serializePostRecord),
+    answeredPosts: posts.answeredPosts.map(serializePostRecord),
   };
 }
 

@@ -1,11 +1,13 @@
 import { AppShellNav } from "@/components/app-shell-nav";
 import { DashboardWorkbench } from "@/components/dashboard-workbench";
 import { requireUser } from "@/server/auth";
+import { getDashboardSnapshot } from "@/server/dashboard/tracking";
 
 export const runtime = "nodejs";
 
 export default async function DashboardPage() {
   const session = await requireUser("EDITOR");
+  const dashboard = await getDashboardSnapshot();
 
   return (
     <main className="shell dashboard workflowPage">
@@ -32,8 +34,7 @@ export default async function DashboardPage() {
           ]}
         />
       </header>
-
-      <DashboardWorkbench />
+      <DashboardWorkbench initialDashboard={dashboard} />
     </main>
   );
 }

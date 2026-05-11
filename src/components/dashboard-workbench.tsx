@@ -56,6 +56,10 @@ const EMPTY_SEARCH_STATE: DashboardSearchState = {
   answeredPosts: "",
 };
 
+type DashboardWorkbenchProps = {
+  initialDashboard?: DashboardSnapshot;
+};
+
 function splitBulkInput(value: string) {
   return value
     .split(/[\n,]+/)
@@ -163,12 +167,12 @@ export function buildDashboardLoadResult(results: DashboardLoadSections): Dashbo
   };
 }
 
-export function DashboardWorkbench() {
-  const [dashboard, setDashboard] = useState<DashboardSnapshot>(EMPTY_DASHBOARD);
+export function DashboardWorkbench({ initialDashboard = EMPTY_DASHBOARD }: DashboardWorkbenchProps) {
+  const [dashboard, setDashboard] = useState<DashboardSnapshot>(initialDashboard);
   const [search, setSearch] = useState<DashboardSearchState>(EMPTY_SEARCH_STATE);
   const [keywordInput, setKeywordInput] = useState("");
   const [threadInput, setThreadInput] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [pendingAction, setPendingAction] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -505,7 +509,7 @@ export function DashboardWorkbench() {
             <div>
               <h2>Tracked Reddit threads</h2>
               <p className="muted" style={{ marginTop: 8 }}>
-                Add one or more Reddit thread URLs to keep them visible in the operator queue.
+                Add one or more Reddit thread URLs to keep them visible in this dashboard list.
               </p>
             </div>
           </div>
