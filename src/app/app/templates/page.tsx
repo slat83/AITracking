@@ -1,6 +1,7 @@
 import { AppShellNav } from "@/components/app-shell-nav";
 import { requireUser } from "@/server/auth";
 import { prisma } from "@/server/db/client";
+import { summarizeTemplateGovernance } from "@/server/governance/summary";
 
 export const runtime = "nodejs";
 
@@ -13,6 +14,12 @@ type LaunchPackGroup = {
     description: string | null;
     playbookName: string | null;
     nextAction: string | null;
+    safetyLabel: string;
+    missingProofTypes: string[];
+    restrictedChannels: string[];
+    hasApprovalPrerequisite: boolean;
+    ownerRoles: string[];
+    allowedUsageNotes: string[];
   }>;
 };
 
@@ -32,6 +39,15 @@ export default async function TemplatesPage() {
       launchPack: true,
       launchLabel: true,
       description: true,
+      family: true,
+      evidenceAssets: {
+        select: {
+          proofAssetType: true,
+          readiness: true,
+          restrictedChannels: true,
+          allowedUsage: true,
+        },
+      },
       playbooks: {
         where: {
           isDefault: true,
@@ -40,15 +56,40 @@ export default async function TemplatesPage() {
         select: {
           name: true,
           recommendedNextAction: true,
+          prerequisites: {
+            where: {
+              isActive: true,
+            },
+            select: {
+              prerequisiteType: true,
+              requiredProofAssetType: true,
+              ownerRole: true,
+              isRequired: true,
+            },
+          },
         },
         take: 1,
       },
     },
   });
+  const governanceByScenarioType = new Map(
+    summarizeTemplateGovernance(
+      scenarioTypes.map((scenarioType) => ({
+        id: scenarioType.id,
+        name: scenarioType.name,
+        family: scenarioType.family,
+        launchPack: scenarioType.launchPack,
+        launchLabel: scenarioType.launchLabel,
+        evidenceAssets: scenarioType.evidenceAssets,
+        prerequisites: scenarioType.playbooks.flatMap((playbook) => playbook.prerequisites),
+      })),
+    ).map((summary) => [summary.id, summary]),
+  );
 
   const launchPacks = scenarioTypes.reduce<LaunchPackGroup[]>((groups, scenarioType) => {
     const packName = scenarioType.launchPack ?? "Unassigned";
     const group = groups.find((entry) => entry.name === packName);
+    const governance = governanceByScenarioType.get(scenarioType.id);
     const item = {
       id: scenarioType.id,
       name: scenarioType.name,
@@ -56,6 +97,12 @@ export default async function TemplatesPage() {
       description: scenarioType.description,
       playbookName: scenarioType.playbooks[0]?.name ?? null,
       nextAction: scenarioType.playbooks[0]?.recommendedNextAction ?? null,
+      safetyLabel: governance?.safetyLabel ?? "Safety review pending",
+      missingProofTypes: governance?.missingProofTypes ?? [],
+      restrictedChannels: governance?.restrictedChannels ?? [],
+      hasApprovalPrerequisite: governance?.hasApprovalPrerequisite ?? false,
+      ownerRoles: governance?.ownerRoles ?? [],
+      allowedUsageNotes: governance?.allowedUsageNotes ?? [],
     };
 
     if (group) {
@@ -98,6 +145,16 @@ export default async function TemplatesPage() {
           <p className="muted">Seeded templates</p>
           <p className="statValue">{scenarioTypes.length}</p>
         </article>
+        <article className="card dashboardCard">
+          <p className="muted">Approval-gated templates</p>
+          <p className="statValue">
+            {
+              [...governanceByScenarioType.values()].filter(
+                (summary) => summary.hasApprovalPrerequisite,
+              ).length
+            }
+          </p>
+        </article>
       </section>
 
       <section className="shellSection">
@@ -120,7 +177,10 @@ export default async function TemplatesPage() {
               <div className="workspaceChecklist">
                 {pack.items.map((item) => (
                   <article className="workspaceChecklistItem" key={item.id}>
-                    <strong>{item.launchLabel ?? item.name}</strong>
+                    <div className="workspaceChecklistHeader">
+                      <strong>{item.launchLabel ?? item.name}</strong>
+                      <span className="pill">{item.safetyLabel}</span>
+                    </div>
                     <p className="muted">
                       Scenario type: {item.name}
                     </p>
@@ -130,6 +190,21 @@ export default async function TemplatesPage() {
                     </p>
                     <p className="muted">
                       Starting action: {item.nextAction ?? "No starting action configured yet."}
+                    </p>
+                    <p className="muted">
+                      Approval gate: {item.hasApprovalPrerequisite ? "Required before execution" : "No explicit approval prerequisite"}
+                    </p>
+                    <p className="muted">
+                      Missing proof: {item.missingProofTypes.length > 0 ? item.missingProofTypes.join(", ") : "None"}
+                    </p>
+                    <p className="muted">
+                      Restricted channels: {item.restrictedChannels.length > 0 ? item.restrictedChannels.join(", ") : "None"}
+                    </p>
+                    <p className="muted">
+                      Owner roles: {item.ownerRoles.length > 0 ? item.ownerRoles.join(", ") : "No owner role modeled"}
+                    </p>
+                    <p className="muted">
+                      Usage notes: {item.allowedUsageNotes.length > 0 ? item.allowedUsageNotes[0] : "No usage guidance attached yet."}
                     </p>
                   </article>
                 ))}

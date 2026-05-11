@@ -1,6 +1,7 @@
 import { TaskStatus, OpportunityStatus } from "@prisma/client";
 import Link from "next/link";
 
+import { AppShellNav } from "@/components/app-shell-nav";
 import { requireUser } from "@/server/auth";
 import { hasRequiredRole } from "@/server/auth/roles";
 import { prisma } from "@/server/db/client";
@@ -72,6 +73,7 @@ export default async function OpportunitiesPage({ searchParams }: PageProps) {
   const params = (await searchParams) ?? {};
   const error = getMessage(params.error);
   const notice = getMessage(params.notice);
+  const focusedOpportunityId = getMessage(params.opportunity);
 
   const [opportunities, users, scenarioTypes] = await Promise.all([
     prisma.opportunity.findMany({
@@ -153,25 +155,31 @@ export default async function OpportunitiesPage({ searchParams }: PageProps) {
 
   return (
     <main className="shell dashboard workflowPage">
-      <header className="topbar">
-        <div className="topbarInner">
+      <header className="topbar workspaceHeader">
+        <div className="topbarInner workspaceHeaderInner">
           <div>
-            <div className="eyebrow">Opportunity workflow</div>
-            <h1 style={{ fontSize: "2.5rem", margin: "12px 0 0" }}>Intake and triage queue</h1>
-            <p className="muted" style={{ marginTop: 10, maxWidth: 720 }}>
-              Capture new opportunities, qualify them against the active seeded scenario
-              types, and only move work to draft when the brief is complete enough for a
-              separate operator to execute.
+            <div className="eyebrow">Workspace support flow</div>
+            <h1 style={{ fontSize: "2.5rem", margin: "12px 0 0" }}>Detached intake and triage support queue</h1>
+            <p className="muted workspaceIntro">
+              Capture new intake, qualify it against the active seeded scenario
+              types, and hand it into the scenario workspace once the brief is complete enough for
+              a downstream operator to execute.
             </p>
           </div>
-          <div className="stack" style={{ justifyItems: "end" }}>
+          <div className="workspaceHeaderActions">
             <div className="pill">{session.user.role}</div>
             <Link className="button buttonSecondary" href="/app">
-              Back to dashboard
+              Return to workspace
             </Link>
           </div>
         </div>
+        <AppShellNav activeKey="workspace" />
       </header>
+
+      <section className="card dashboardCard workflowMessage workflowMessageNotice">
+        The primary shell lives in the scenario workspace. Use this page when intake needs cleanup,
+        triage, or a linked source record from the active scenario.
+      </section>
 
       <section className="statsGrid dashboardHeader">
         <article className="card dashboardCard">
@@ -309,7 +317,12 @@ export default async function OpportunitiesPage({ searchParams }: PageProps) {
             ) : (
               <div className="stack">
                 {group.items.map((opportunity) => (
-                  <form action={updateOpportunityAction} className="workflowOpportunityCard" key={opportunity.id}>
+                  <form
+                    action={updateOpportunityAction}
+                    className={`workflowOpportunityCard${focusedOpportunityId === opportunity.id ? " workflowOpportunityCardActive" : ""}`}
+                    id={`opportunity-${opportunity.id}`}
+                    key={opportunity.id}
+                  >
                     <input name="opportunityId" type="hidden" value={opportunity.id} />
                     <div className="workflowOpportunityHeader">
                       <div>
@@ -331,6 +344,11 @@ export default async function OpportunitiesPage({ searchParams }: PageProps) {
                           <div>
                             <div className="eyebrow">Linked scenario</div>
                             <strong>{opportunity.scenarioRecord.scenarioType.name}</strong>
+                            {focusedOpportunityId === opportunity.id ? (
+                              <p className="muted" style={{ marginTop: 8 }}>
+                                This intake is currently being reviewed from the scenario workspace.
+                              </p>
+                            ) : null}
                           </div>
                           <Link
                             className="button buttonSecondary"
@@ -343,6 +361,7 @@ export default async function OpportunitiesPage({ searchParams }: PageProps) {
                           <span className="pill">{formatEnumLabel(opportunity.scenarioRecord.status)}</span>
                           <span className="pill">{getHealthLabel(opportunity.scenarioRecord)}</span>
                           <span className="pill">{formatEnumLabel(opportunity.scenarioRecord.proofReadiness)}</span>
+                          <span className="pill">{opportunity.drafts.length} intake draft handoff{opportunity.drafts.length === 1 ? "" : "s"}</span>
                         </div>
                         <div className="workflowScenarioGrid">
                           <article className="workflowScenarioCard">

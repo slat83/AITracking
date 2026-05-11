@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { requireDashboardEditor } from "@/server/dashboard/api-auth";
+import { extractKeywordsFromWorkbook } from "@/server/dashboard/keyword-workbook";
 import {
   addTrackedKeyword,
   createTrackedKeywordInputSchema,
@@ -30,6 +31,38 @@ const deleteKeywordPayloadSchema = z.union([
   }),
 ]);
 
+async function getCreateKeywordsPayload(request: Request) {
+  const contentType = request.headers.get("content-type") ?? "";
+
+  if (contentType.includes("multipart/form-data")) {
+    const formData = await request.formData();
+    const workbook = formData.get("workbook");
+    const sheetName = formData.get("sheetName");
+
+    if (!(workbook instanceof File)) {
+      throw new z.ZodError([
+        {
+          code: "custom",
+          path: ["workbook"],
+          message: "Attach a workbook file.",
+        },
+      ]);
+    }
+
+    const { keywords } = extractKeywordsFromWorkbook(Buffer.from(await workbook.arrayBuffer()), {
+      sheetName: typeof sheetName === "string" ? sheetName : undefined,
+    });
+
+    return { keywords };
+  }
+
+  const json = await request.json();
+  const payload = createKeywordPayloadSchema.parse(json);
+  return {
+    keywords: "keywords" in payload ? payload.keywords : [payload.keyword],
+  };
+}
+
 export async function GET() {
   const auth = await requireDashboardEditor();
 
@@ -49,15 +82,16 @@ export async function POST(request: Request) {
   }
 
   try {
-    const json = await request.json();
-    const payload = createKeywordPayloadSchema.parse(json);
-    const keywords = "keywords" in payload ? payload.keywords : [payload.keyword];
+    const { keywords } = await getCreateKeywordsPayload(request);
 
     for (const keyword of keywords) {
       await addTrackedKeyword({ keyword });
     }
 
-    return NextResponse.json({ ok: true, keywords: await listTrackedKeywords() }, { status: 201 });
+    return NextResponse.json(
+      { ok: true, importedCount: keywords.length, keywords: await listTrackedKeywords() },
+      { status: 201 },
+    );
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(

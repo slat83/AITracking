@@ -181,6 +181,35 @@ Approvals belong beside blockers, not buried in artifact detail. The module shou
 - decision deadline or SLA
 - latest decision note
 
+### Approval and blocker hierarchy
+
+The action rail should answer one operator question before anything else: what is stopping progress right now, who owns the unblock, and what resolves it.
+
+Recommended action-rail order:
+
+1. `Next best action`
+2. `Blockers`
+3. `Approvals`
+4. `Required proof`
+5. `Escalate or reassign`
+
+Hierarchy rules:
+
+- If an active blocker exists, show the blocker module immediately below `Next best action`.
+- Keep approvals directly below blockers because approval gates are a common blocking path and need to be read in the same scan.
+- Do not place `Required proof` above blockers or approvals when proof state is only supporting context for an already-blocked action.
+- Lead each module with the human decision, not the system label. Prefer `Legal review is blocking launch copy` over generic headings like `Approval state` or `Blocker`.
+
+Minimum metadata priority inside each card:
+
+- first line: plain-language blocker or approval summary
+- second line: owner or approver, plus blocker type or approval type
+- third line: age signal such as raised time, requested time, or deadline/SLA
+- fourth line: approval target or linked blocking object
+- fifth line: latest decision note or unblock instruction
+
+This means engineering needs the workspace query layer to expose blocker owner, blocker type, raised timestamp, linked blocking object, approval target, approver, and latest decision note as first-class module fields. If those fields are absent, the rail cannot support fast operator decisions.
+
 ### Outcome panel
 
 This module should sit below the task and artifact lane. It should capture:
@@ -319,6 +348,16 @@ Evidence readiness should be visible in both the queue and the action rail becau
 - `expired`: a prior approval existed, but its policy or time window is no longer valid
 
 Approval state should always identify the approval target so operators can tell whether the decision applies to the scenario, a task, or an artifact.
+
+### Mobile and stacked behavior
+
+The stacked layout must preserve the action rail as a high-priority surface instead of letting it fall below the full detail workspace.
+
+- On narrow screens, keep the action rail above lower-priority detail modules, or pin a compact urgent-state summary near the top before the user scrolls.
+- Preserve the same order on mobile as desktop: `Next best action`, `Blockers`, `Approvals`, `Required proof`, then `Escalate or reassign`.
+- The first mobile viewport should expose blocker owner, blocker type, blocker age, approval target, approver, and latest decision note without requiring a long scroll through timeline or artifact content.
+- If the rail must collapse, collapse proof and escalation detail before hiding blocker or approval context.
+- Test the stacked layout with an active blocker and a pending approval at the same time. The design fails if the user has to scroll past the queue and scenario detail before seeing why work is stopped.
 
 ### Outcome states
 

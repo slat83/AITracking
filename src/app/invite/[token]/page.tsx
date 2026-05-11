@@ -33,16 +33,15 @@ export default async function PilotInvitePage({ params, searchParams }: PageProp
   }
 
   const expired = Boolean(invite.acceptedAt) || invite.expiresAt.getTime() < now.getTime();
+  const inviteHeadline = `Join the ${invite.pilot.brandName} workspace`;
+  const inviteIntro = `This invite grants access to the founder-led Flowvory audit workspace for ${invite.contact.email}. Set your password here once, then use the normal sign-in page for future access.`;
 
   return (
     <main className="shell">
       <section className="card formCard">
         <div className="eyebrow">Invite-only workspace access</div>
-        <h1 style={{ fontSize: "2.25rem", marginBottom: 12 }}>Join the {invite.pilot.brandName} workspace</h1>
-        <p className="muted signInHint">
-          This invite grants access to the founder-led Flowvory audit workspace for {invite.contact.email}.
-          Set your password here once, then use the normal sign-in page for future access.
-        </p>
+        <h1 style={{ fontSize: "2.25rem", marginBottom: 12 }}>{inviteHeadline}</h1>
+        <p className="muted signInHint">{inviteIntro}</p>
 
         {expired ? (
           <p style={{ color: "#b91c1c", marginTop: 20 }}>

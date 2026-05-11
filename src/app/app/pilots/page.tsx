@@ -75,18 +75,25 @@ export default async function PilotsPage({ searchParams }: PageProps) {
       <header className="topbar">
         <div className="topbarInner">
           <div>
-            <div className="eyebrow">Pilot operations</div>
+            <div className="eyebrow">Secondary operator view</div>
             <h1 style={{ fontSize: "2.5rem", margin: "12px 0 0" }}>Provisioning and manual invoicing</h1>
             <p className="muted" style={{ marginTop: 10, maxWidth: 760 }}>
-              Create founder-led pilot records, provision invite-only workspaces, track honest
-              service state, and manage manual invoices without touching the database directly.
+              Pilot provisioning stays available for internal operations, but it sits behind the
+              scenario workspace rather than competing with it as a primary shell destination.
             </p>
           </div>
           <div className="stack" style={{ justifyItems: "end" }}>
             <div className="pill">{session.user.role}</div>
           </div>
         </div>
-        <AppShellNav activeKey="pilots" />
+        <AppShellNav
+          activeKey="workspace"
+          activeSecondaryKey="pilots"
+          secondaryItems={[
+            { key: "dashboard", label: "Community dashboard", href: "/app/dashboard" },
+            { key: "pilots", label: "Pilot operations", href: "/app/pilots" },
+          ]}
+        />
       </header>
 
       <section className="statsGrid dashboardHeader">

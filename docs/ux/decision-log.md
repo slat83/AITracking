@@ -221,5 +221,33 @@ Existing artifacts such as `docs/ux/intake-draft-workflow-contract.md` or `docs/
 
 ### Follow-up
 
-- Update active user-facing tickets that currently lack a direct `docs/ux/` artifact link.
-- Use workflow-specific handoff docs for any new ticket that is not already covered by an accepted UX brief or contract.
+- Link the exact handoff artifact from each active implementation issue before pickup.
+- Reject pickup when a ticket still points to multiple competing UX sources.
+
+## UXD-007: Keep scenario reassignment and escalation inside the action rail as separate inline flows
+
+- Date: 2026-05-11
+- Related issue: [AIT-144](/AIT/issues/AIT-144)
+- Status: accepted
+- Owner: UX Designer
+
+### Context
+
+The scenario workspace shell already reserves a right-rail surface for `Escalate or reassign`, but engineering still lacks a concrete contract for how reassignment differs from escalation, what fields are required, how the mobile stack should behave, and where audit history should appear after a change.
+
+### Decision
+
+Keep reassignment and escalation inside the existing action rail as two separate inline actions that expand in place instead of navigating to a new screen or opening a detached management flow.
+
+Use the workflow contract in `docs/ux/ait-144-scenario-reassignment-escalation-handoff.md` as the canonical implementation artifact. Require mandatory reason capture for both actions, explicit permission and empty-target states, and post-action audit visibility in both the scenario timeline and the collapsed rail summary.
+
+### Impact
+
+- Engineering can implement the current shell without inventing new IA or modal-heavy workflow detours.
+- Operators keep blocker, approval, and ownership context visible while making the change.
+- The product preserves a clear distinction between day-to-day ownership transfer and higher-level escalation.
+
+### Follow-up
+
+- Link the handoff from [AIT-127](/AIT/issues/AIT-127) before implementation resumes.
+- Validate the final target-list schema against the UI distinction between `escalation target` and `escalation owner`.

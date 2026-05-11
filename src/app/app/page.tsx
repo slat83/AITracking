@@ -10,14 +10,23 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { AppShellNav } from "@/components/app-shell-nav";
+import { escalateScenarioAction, reassignScenarioOwnerAction } from "@/app/app/scenario-actions";
 import { requireUser } from "@/server/auth";
 import { prisma } from "@/server/db/client";
 import { saveFounderOnboardingAction } from "@/app/app/founder-actions";
 import { resolvePilotCommercialState, resolvePilotInvoiceStatus } from "@/server/pilots/commercial";
 import {
+  WORKSPACE_FRESHNESS_WINDOWS,
+  WORKSPACE_SORTS,
   WORKSPACE_VIEWS,
+  getLatestWorkspaceEscalation,
+  getWorkspaceApprovals,
+  getWorkspaceBlockers,
+  parseWorkspaceQueueFilters,
   type WorkspaceScenario,
+  getWorkspaceChildArtifacts,
   getScenarioWorkspaceData,
+  type WorkspaceOwnershipAuditEvent,
   getWorkspaceViewMeta,
   parseWorkspaceView,
 } from "@/server/scenarios/workspace";
@@ -30,6 +39,22 @@ type PageProps = {
 
 function getMessage(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] : value;
+}
+
+function buildWorkspaceQuery(input: {
+  view: string;
+  scenario?: string;
+  scenarioType?: string;
+  urgency?: string;
+  owner?: string;
+  account?: string;
+  freshness?: string;
+  sort?: string;
+  ownershipMode?: string;
+}) {
+  return Object.fromEntries(
+    Object.entries(input).filter((entry): entry is [string, string] => Boolean(entry[1])),
+  );
 }
 
 function formatEnumLabel(value: string) {
@@ -133,7 +158,8 @@ function getPrerequisiteTone(status: ScenarioPrerequisiteStatus) {
 }
 
 function buildTimeline(selectedScenario: WorkspaceScenario) {
-  const items = [
+  const childArtifacts = getWorkspaceChildArtifacts(selectedScenario);
+  return [
     {
       id: `scenario-captured-${selectedScenario.id}`,
       title: "Scenario captured",
@@ -164,10 +190,10 @@ function buildTimeline(selectedScenario: WorkspaceScenario) {
       detail: `${task.title} is owned by ${task.owner?.name ?? "Unassigned"}.`,
       at: task.updatedAt,
     })),
-    ...selectedScenario.artifacts.map((artifact) => ({
+    ...childArtifacts.map((artifact) => ({
       id: `artifact-${artifact.id}`,
-      title: "Artifact updated",
-      detail: `${artifact.title} is in ${formatEnumLabel(artifact.status).toLowerCase()}.`,
+      title: artifact.source === "draft" ? "Draft handoff updated" : "Artifact updated",
+      detail: `${artifact.title} is in ${artifact.statusLabel.toLowerCase()}.`,
       at: artifact.updatedAt,
     })),
     ...(selectedScenario.outcome
@@ -183,8 +209,42 @@ function buildTimeline(selectedScenario: WorkspaceScenario) {
         ]
       : []),
   ];
+}
 
-  return items.sort((left, right) => left.at.getTime() - right.at.getTime()).slice(-10);
+function buildWorkspaceTimeline(
+  selectedScenario: WorkspaceScenario,
+  ownershipAuditEvents: WorkspaceOwnershipAuditEvent[],
+) {
+  const items = [
+    ...buildTimeline(selectedScenario),
+    ...ownershipAuditEvents.map((event) => ({
+      id: event.anchorId,
+      title: event.action === "owner_reassigned" ? "Scenario reassigned" : "Scenario escalated",
+      detail: event.detail,
+      at: event.createdAt,
+    })),
+  ];
+
+  return items.sort((left, right) => left.at.getTime() - right.at.getTime()).slice(-12);
+}
+
+function WorkspaceContextFields(input: {
+  selectedView: string;
+  selectedScenarioId: string;
+  queueFilters: ReturnType<typeof parseWorkspaceQueueFilters>;
+}) {
+  return (
+    <>
+      <input name="view" type="hidden" value={input.selectedView} />
+      <input name="scenario" type="hidden" value={input.selectedScenarioId} />
+      <input name="scenarioType" type="hidden" value={input.queueFilters.scenarioTypeId ?? ""} />
+      <input name="urgency" type="hidden" value={input.queueFilters.urgency ?? ""} />
+      <input name="owner" type="hidden" value={input.queueFilters.ownerId ?? ""} />
+      <input name="account" type="hidden" value={input.queueFilters.accountId ?? ""} />
+      <input name="freshness" type="hidden" value={input.queueFilters.freshness} />
+      <input name="sort" type="hidden" value={input.queueFilters.sort} />
+    </>
+  );
 }
 
 export default async function WorkspacePage({ searchParams }: PageProps) {
@@ -194,6 +254,14 @@ export default async function WorkspacePage({ searchParams }: PageProps) {
   const selectedView = parseWorkspaceView(params.view);
   const selectedScenarioId = getMessage(params.scenario);
   const notice = getMessage(params.notice);
+  const ownershipMode = getMessage(params.ownershipMode);
+  const ownershipError = getMessage(params.ownershipError);
+  const ownershipNotice = getMessage(params.ownershipNotice);
+  const ownershipReason = getMessage(params.reason) ?? "";
+  const reassignmentTargetId = getMessage(params.newOwnerId) ?? "";
+  const escalationTargetId = getMessage(params.escalationTargetId) ?? "";
+  const escalationOwnerId = getMessage(params.escalationOwnerId) ?? "";
+  const queueFilters = parseWorkspaceQueueFilters(params);
 
   if (session.user.role === "VIEWER") {
     const founderMembership = await prisma.pilotContact.findFirst({
@@ -439,13 +507,23 @@ export default async function WorkspacePage({ searchParams }: PageProps) {
   const workspaceData = await getScenarioWorkspaceData(prisma, {
     userId: session.user.id,
     view: selectedView,
+    filters: queueFilters,
     selectedScenarioId,
   });
 
   const selectedScenario = workspaceData.selectedScenario;
   const selectedViewMeta = getWorkspaceViewMeta(selectedView);
-  const timeline = selectedScenario ? buildTimeline(selectedScenario) : [];
+  const timeline = selectedScenario
+    ? buildWorkspaceTimeline(selectedScenario, workspaceData.ownershipAuditEvents)
+    : [];
   const queueTotal = workspaceData.scenarios.length;
+  const activeFilterCount = [
+    queueFilters.scenarioTypeId,
+    queueFilters.urgency,
+    queueFilters.ownerId,
+    queueFilters.accountId,
+    queueFilters.freshness !== "any" ? queueFilters.freshness : undefined,
+  ].filter(Boolean).length;
   const openTaskCount = selectedScenario
     ? selectedScenario.tasks.filter((task) => task.status !== "COMPLETE" && task.status !== "CANCELED").length
     : 0;
@@ -457,23 +535,39 @@ export default async function WorkspacePage({ searchParams }: PageProps) {
         (prerequisite) => prerequisite.status === "SATISFIED" || prerequisite.status === "WAIVED",
       ).length
     : 0;
+  const childArtifacts = selectedScenario ? getWorkspaceChildArtifacts(selectedScenario) : [];
+  const blockerItems = selectedScenario ? getWorkspaceBlockers(selectedScenario) : [];
+  const approvalItems = selectedScenario ? getWorkspaceApprovals(selectedScenario) : [];
+  const latestOwnershipEvent = workspaceData.ownershipAuditEvents[0] ?? null;
+  const latestEscalation = getLatestWorkspaceEscalation(workspaceData.ownershipAuditEvents);
+  const hasEligibleOwners = workspaceData.ownershipOptions.length > 0;
+  const canMutateOwnership = Boolean(
+    selectedScenario
+    && (session.user.role === "ADMIN"
+      || (session.user.role === "EDITOR" && selectedScenario.owner?.id === session.user.id)),
+  );
+  const scenarioIsReadOnly = Boolean(
+    selectedScenario && (selectedScenario.status === "ARCHIVED" || selectedScenario.status === "RESOLVED"),
+  );
+  const reassignOptions = workspaceData.ownershipOptions.filter((option) => option.value !== selectedScenario?.owner?.id);
+  const escalationButtonLabel = latestEscalation ? "Update escalation" : "Escalate";
 
   return (
     <main className="shell dashboard workspacePage">
       <header className="topbar workspaceHeader">
         <div className="topbarInner workspaceHeaderInner">
           <div>
-            <div className="eyebrow">Invite-only audit workspace</div>
-            <h1 style={{ fontSize: "2.5rem", margin: "12px 0 0" }}>Flowvory workspace</h1>
+            <div className="eyebrow">Scenario workspace</div>
+            <h1 style={{ fontSize: "2.5rem", margin: "12px 0 0" }}>Workspace queue and scenario control surface</h1>
             <p className="muted workspaceIntro">
-              Review active audits, track what changed, and keep proof, approvals, and next actions
-              visible in one place.
+              Use the queue as the default shell surface, then move into evidence, playbooks,
+              templates, reporting, or settings only when the active scenario requires it.
             </p>
           </div>
           <div className="workspaceHeaderActions">
             <div className="pill">{session.user.role}</div>
             <Link className="button buttonSecondary" href="/app/opportunities">
-              Open intake queue
+              Open intake support queue
             </Link>
           </div>
         </div>
@@ -538,9 +632,93 @@ export default async function WorkspacePage({ searchParams }: PageProps) {
           <div className="workspacePanelHeader">
             <div>
               <h2>Queue</h2>
-              <p className="muted" style={{ marginTop: 8 }}>{selectedViewMeta.description}</p>
+              <p className="muted" style={{ marginTop: 8 }}>
+                {selectedViewMeta.description}
+                {activeFilterCount > 0 ? ` · ${activeFilterCount} active filter${activeFilterCount === 1 ? "" : "s"}` : ""}
+              </p>
             </div>
           </div>
+          <form className="workspaceQueueControls" method="get">
+            <input name="view" type="hidden" value={selectedView} />
+            <div className="workspaceControlGrid">
+              <label className="field">
+                <span>Scenario type</span>
+                <select className="workflowSelect" defaultValue={queueFilters.scenarioTypeId ?? ""} name="scenarioType">
+                  <option value="">All scenario types</option>
+                  {workspaceData.queueOptions.scenarioTypes.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="field">
+                <span>Urgency</span>
+                <select className="workflowSelect" defaultValue={queueFilters.urgency ?? ""} name="urgency">
+                  <option value="">All urgency</option>
+                  <option value="HIGH">High</option>
+                  <option value="MEDIUM">Medium</option>
+                  <option value="LOW">Low</option>
+                </select>
+              </label>
+              <label className="field">
+                <span>Owner</span>
+                <select className="workflowSelect" defaultValue={queueFilters.ownerId ?? ""} name="owner">
+                  <option value="">All owners</option>
+                  {workspaceData.queueOptions.owners.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="field">
+                <span>Account</span>
+                <select className="workflowSelect" defaultValue={queueFilters.accountId ?? ""} name="account">
+                  <option value="">All accounts</option>
+                  {workspaceData.queueOptions.accounts.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="field">
+                <span>Freshness</span>
+                <select className="workflowSelect" defaultValue={queueFilters.freshness} name="freshness">
+                  {WORKSPACE_FRESHNESS_WINDOWS.map((window) => (
+                    <option key={window.key} value={window.key}>
+                      {window.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="field">
+                <span>Sort</span>
+                <select className="workflowSelect" defaultValue={queueFilters.sort} name="sort">
+                  {WORKSPACE_SORTS.map((sortOption) => (
+                    <option key={sortOption.key} value={sortOption.key}>
+                      {sortOption.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+            <div className="buttonRow workspaceQueueControlsActions">
+              <button className="button buttonPrimary" type="submit">
+                Apply controls
+              </button>
+              <Link
+                className="button buttonSecondary"
+                href={{
+                  pathname: "/app",
+                  query: buildWorkspaceQuery({ view: selectedView }),
+                }}
+              >
+                Reset
+              </Link>
+            </div>
+          </form>
           <div className="workspaceViewList">
             {WORKSPACE_VIEWS.map((view) => {
               const count = workspaceData.viewCounts.find((entry) => entry.key === view.key)?.count ?? 0;
@@ -549,7 +727,15 @@ export default async function WorkspacePage({ searchParams }: PageProps) {
                   className={`workspaceViewLink${selectedView === view.key ? " workspaceViewLinkActive" : ""}`}
                   href={{
                     pathname: "/app",
-                    query: { view: view.key },
+                    query: buildWorkspaceQuery({
+                      view: view.key,
+                      scenarioType: queueFilters.scenarioTypeId,
+                      urgency: queueFilters.urgency,
+                      owner: queueFilters.ownerId,
+                      account: queueFilters.accountId,
+                      freshness: queueFilters.freshness !== "any" ? queueFilters.freshness : undefined,
+                      sort: queueFilters.sort,
+                    }),
                   }}
                   key={view.key}
                 >
@@ -563,7 +749,7 @@ export default async function WorkspacePage({ searchParams }: PageProps) {
             {workspaceData.scenarios.length === 0 ? (
               <div className="workspaceEmptyState">
                 <strong>No scenarios in this view.</strong>
-                <p className="muted">Shift to another saved view or capture new intake from the queue.</p>
+                <p className="muted">Shift to another saved view or capture new intake from the support queue.</p>
               </div>
             ) : (
               workspaceData.scenarios.map((scenario) => {
@@ -573,7 +759,16 @@ export default async function WorkspacePage({ searchParams }: PageProps) {
                     className={`workspaceQueueCard${selectedScenario?.id === scenario.id ? " workspaceQueueCardActive" : ""}`}
                     href={{
                       pathname: "/app",
-                      query: { view: selectedView, scenario: scenario.id },
+                      query: buildWorkspaceQuery({
+                        view: selectedView,
+                        scenario: scenario.id,
+                        scenarioType: queueFilters.scenarioTypeId,
+                        urgency: queueFilters.urgency,
+                        owner: queueFilters.ownerId,
+                        account: queueFilters.accountId,
+                        freshness: queueFilters.freshness !== "any" ? queueFilters.freshness : undefined,
+                        sort: queueFilters.sort,
+                      }),
                     }}
                     key={scenario.id}
                   >
@@ -685,7 +880,7 @@ export default async function WorkspacePage({ searchParams }: PageProps) {
                 </div>
                 <div className="workspaceTimeline">
                   {timeline.map((item) => (
-                    <article className="workspaceTimelineItem" key={item.id}>
+                    <article className="workspaceTimelineItem" id={item.id} key={item.id}>
                       <div className="workspaceTimelineDot" />
                       <div>
                         <strong>{item.title}</strong>
@@ -702,6 +897,25 @@ export default async function WorkspacePage({ searchParams }: PageProps) {
                   <h3>Scenario context</h3>
                 </div>
                 <div className="workspaceContextGrid">
+                  <article className="workspaceInlineCard">
+                    <span className="metaLabel">Originating intake</span>
+                    <p>
+                      {selectedScenario.sourceOpportunity
+                        ? `${selectedScenario.sourceOpportunity.title} · ${formatEnumLabel(selectedScenario.sourceOpportunity.status)}`
+                        : "This scenario no longer has a linked intake record."}
+                    </p>
+                    {selectedScenario.sourceOpportunity ? (
+                      <Link
+                        className="button buttonSecondary"
+                        href={{
+                          pathname: "/app/opportunities",
+                          query: { opportunity: selectedScenario.sourceOpportunity.id },
+                        }}
+                      >
+                        Open intake record
+                      </Link>
+                    ) : null}
+                  </article>
                   <article className="workspaceInlineCard">
                     <span className="metaLabel">User problem or demand</span>
                     <p>{selectedScenario.sourceOpportunity?.briefQuestion ?? selectedScenario.summary}</p>
@@ -772,20 +986,21 @@ export default async function WorkspacePage({ searchParams }: PageProps) {
                     );
                   })}
                   <article className="workspaceLaneCard workspaceArtifactsCard">
-                    <h4>Artifacts</h4>
-                    {selectedScenario.artifacts.length === 0 ? (
-                      <p className="muted">No child artifacts are attached yet.</p>
+                    <h4>Child artifacts</h4>
+                    {childArtifacts.length === 0 ? (
+                      <p className="muted">No child artifacts or inherited draft handoffs are attached yet.</p>
                     ) : (
                       <div className="workspaceList">
-                        {selectedScenario.artifacts.map((artifact) => (
+                        {childArtifacts.map((artifact) => (
                           <div className="workspaceListRow" key={artifact.id}>
                             <div>
                               <strong>{artifact.title}</strong>
                               <p className="muted">
-                                {artifact.artifactType} · Created from this scenario
+                                {artifact.artifactType} · {artifact.relationshipLabel}
                               </p>
+                              {artifact.ownerName ? <p className="muted">Owner: {artifact.ownerName}</p> : null}
                             </div>
-                            <span className="pill">{formatEnumLabel(artifact.status)}</span>
+                            <span className="pill">{artifact.statusLabel}</span>
                           </div>
                         ))}
                       </div>
@@ -848,9 +1063,17 @@ export default async function WorkspacePage({ searchParams }: PageProps) {
                     <span>Open blockers: {blockedTaskCount}</span>
                   </div>
                   <div className="buttonRow">
-                    <Link className="button buttonPrimary" href="/app/opportunities">
-                      Review signal intake
-                    </Link>
+                    {selectedScenario.sourceOpportunity ? (
+                      <Link
+                        className="button buttonPrimary"
+                        href={{
+                          pathname: "/app/opportunities",
+                          query: { opportunity: selectedScenario.sourceOpportunity.id },
+                        }}
+                      >
+                        Review signal intake
+                      </Link>
+                    ) : null}
                     <Link
                       className="button buttonSecondary"
                       href={{
@@ -862,6 +1085,66 @@ export default async function WorkspacePage({ searchParams }: PageProps) {
                     </Link>
                   </div>
                 </article>
+              </section>
+
+              <section className="workspaceRailSection">
+                <h2>Blockers</h2>
+                {blockerItems.length === 0 ? (
+                  <article className="workspaceRailCard">
+                    <strong>No active blocker is stopping progress.</strong>
+                    <p className="muted">Remaining risk lives in proof completeness, approvals, and task execution timing.</p>
+                  </article>
+                ) : (
+                  <div className="workspaceChecklist">
+                    {blockerItems.map((blocker) => (
+                      <article className="workspaceChecklistItem workspaceDecisionCard" key={blocker.id}>
+                        <div className="workspaceChecklistHeader">
+                          <strong>{blocker.summary}</strong>
+                          <span className={`workspaceToneBadge workspaceToneBadge${blocker.tone}`}>
+                            {blocker.typeLabel}
+                          </span>
+                        </div>
+                        <p className="workspaceDecisionMeta">
+                          {blocker.ownerName ? `Owner: ${blocker.ownerName}` : "Owner not assigned"} · {blocker.typeLabel}
+                        </p>
+                        <p className="workspaceDecisionMeta">
+                          {blocker.raisedAt ? `Raised ${formatRelativeTime(blocker.raisedAt)}` : "Raised time not recorded"}
+                        </p>
+                        <p className="workspaceDecisionMeta">Blocking object: {blocker.linkedObjectLabel}</p>
+                        <p className="muted">{blocker.note}</p>
+                      </article>
+                    ))}
+                  </div>
+                )}
+              </section>
+
+              <section className="workspaceRailSection">
+                <h2>Approvals</h2>
+                <div className="workspaceChecklist">
+                  {approvalItems.map((approval) => (
+                    <article className="workspaceChecklistItem workspaceDecisionCard" key={approval.id}>
+                      <div className="workspaceChecklistHeader">
+                        <strong>{approval.summary}</strong>
+                        <span className={`workspaceToneBadge workspaceToneBadge${approval.tone}`}>
+                          {approval.statusLabel}
+                        </span>
+                      </div>
+                      <p className="workspaceDecisionMeta">
+                        {approval.approverName ? `Approver: ${approval.approverName}` : "Approver not assigned"} · {approval.typeLabel}
+                      </p>
+                      <p className="workspaceDecisionMeta">
+                        {approval.requestedAt
+                          ? `Requested ${formatDateTime(approval.requestedAt)}`
+                          : approval.resolvedAt
+                            ? `Resolved ${formatDateTime(approval.resolvedAt)}`
+                            : "No approval request is active"}
+                        {approval.deadlineAt ? ` · Due ${formatDateTime(approval.deadlineAt)}` : ""}
+                      </p>
+                      <p className="workspaceDecisionMeta">Target: {approval.targetLabel}</p>
+                      <p className="muted">{approval.note}</p>
+                    </article>
+                  ))}
+                </div>
               </section>
 
               <section className="workspaceRailSection">
@@ -893,49 +1176,238 @@ export default async function WorkspacePage({ searchParams }: PageProps) {
               </section>
 
               <section className="workspaceRailSection">
-                <h2>Approvals</h2>
-                <article className="workspaceRailCard">
-                  <div className="workspaceChecklistHeader">
-                    <strong>{formatEnumLabel(selectedScenario.approvalStatus)}</strong>
-                    <span className={`workspaceToneBadge workspaceToneBadge${selectedScenario.approvalStatus === "APPROVED" || selectedScenario.approvalStatus === "NOT_REQUIRED" ? "success" : selectedScenario.approvalStatus === "PENDING" ? "warning" : "danger"}`}>
-                      {selectedScenario.approvalStatus === "NOT_REQUIRED" ? "No approval gate" : "Approval state"}
-                    </span>
-                  </div>
-                  <p className="muted">
-                    {selectedScenario.approvalStatus === "PENDING"
-                      ? "Execution should pause until the pending approval resolves."
-                      : selectedScenario.approvalStatus === "REJECTED"
-                        ? "Approval was rejected and needs revision or escalation."
-                        : "No additional approval record is blocking this scenario right now."}
-                  </p>
-                </article>
-              </section>
-
-              <section className="workspaceRailSection">
-                <h2>Blockers</h2>
-                <article className="workspaceRailCard">
-                  {selectedScenario.blockedReason ? (
-                    <>
-                      <strong>{selectedScenario.blockedReason}</strong>
-                      <p className="muted">Raised from the current proof or approval state on this scenario.</p>
-                    </>
-                  ) : (
-                    <p className="muted">No scenario-level blocker is recorded. Remaining risk lives in proof completeness and task execution.</p>
-                  )}
-                </article>
-              </section>
-
-              <section className="workspaceRailSection">
                 <h2>Escalate or reassign</h2>
                 <article className="workspaceRailCard">
                   <p className="muted">
-                    Owner: {selectedScenario.owner?.name ?? "Unassigned"} · Due{" "}
-                    {formatDate(selectedScenario.sourceOpportunity?.dueDate)}
+                    Owner: {selectedScenario.owner?.name ?? "Unassigned"} · Due {formatDate(selectedScenario.sourceOpportunity?.dueDate)}
                   </p>
                   <p className="muted">
-                    Reassign and escalation mutations should stay behind explicit product review.
-                    This shell exposes the operating context without guessing on dedicated UX flows.
+                    {latestEscalation
+                      ? `Current escalation: ${latestEscalation.targetLabel}`
+                      : "No active escalation has been recorded yet."}
                   </p>
+                  {latestOwnershipEvent ? (
+                    <p className="workspaceChecklistMeta">
+                      Last changed {formatRelativeTime(latestOwnershipEvent.createdAt)} by {latestOwnershipEvent.actorName ?? "System"}:{" "}
+                      {latestOwnershipEvent.summary.toLowerCase()}
+                    </p>
+                  ) : (
+                    <p className="workspaceChecklistMeta">No ownership or escalation audit note is attached yet.</p>
+                  )}
+                  {latestOwnershipEvent ? (
+                    <p>
+                      <a className="workspaceInlineLink" href={`#${latestOwnershipEvent.anchorId}`}>
+                        View latest audit note
+                      </a>
+                    </p>
+                  ) : null}
+                  {ownershipNotice ? (
+                    <p className="workflowInlineNotice">{ownershipNotice}</p>
+                  ) : null}
+                  {scenarioIsReadOnly ? (
+                    <p className="muted">
+                      This scenario is closed, so ownership and escalation are view-only.
+                    </p>
+                  ) : !canMutateOwnership ? (
+                    <p className="muted">
+                      You can view ownership history, but only authorized leads can reassign or escalate this scenario.
+                    </p>
+                  ) : !hasEligibleOwners ? (
+                    <p className="muted">
+                      No eligible owners are available right now. Ask an admin to update scenario routing.
+                    </p>
+                  ) : (
+                    <>
+                      <div className="buttonRow workspaceMutationActions">
+                        <Link
+                          className={`button ${ownershipMode === "reassign" ? "buttonPrimary" : "buttonSecondary"}`}
+                          href={{
+                            pathname: "/app",
+                            query: buildWorkspaceQuery({
+                              view: selectedView,
+                              scenario: selectedScenario.id,
+                              scenarioType: queueFilters.scenarioTypeId,
+                              urgency: queueFilters.urgency,
+                              owner: queueFilters.ownerId,
+                              account: queueFilters.accountId,
+                              freshness: queueFilters.freshness !== "any" ? queueFilters.freshness : undefined,
+                              sort: queueFilters.sort,
+                              ownershipMode: "reassign",
+                            }),
+                          }}
+                        >
+                          Reassign owner
+                        </Link>
+                        <Link
+                          className={`button ${ownershipMode === "escalate" ? "buttonPrimary" : "buttonSecondary"}`}
+                          href={{
+                            pathname: "/app",
+                            query: buildWorkspaceQuery({
+                              view: selectedView,
+                              scenario: selectedScenario.id,
+                              scenarioType: queueFilters.scenarioTypeId,
+                              urgency: queueFilters.urgency,
+                              owner: queueFilters.ownerId,
+                              account: queueFilters.accountId,
+                              freshness: queueFilters.freshness !== "any" ? queueFilters.freshness : undefined,
+                              sort: queueFilters.sort,
+                              ownershipMode: "escalate",
+                            }),
+                          }}
+                        >
+                          {escalationButtonLabel}
+                        </Link>
+                      </div>
+                      {ownershipError ? (
+                        <p className="workflowInlineError">{ownershipError}</p>
+                      ) : null}
+                      {ownershipMode === "reassign" ? (
+                        <form action={reassignScenarioOwnerAction} className="workspaceMutationForm">
+                          <WorkspaceContextFields
+                            queueFilters={queueFilters}
+                            selectedScenarioId={selectedScenario.id}
+                            selectedView={selectedView}
+                          />
+                          <input name="ownershipMode" type="hidden" value="reassign" />
+                          <input name="scenarioId" type="hidden" value={selectedScenario.id} />
+                          {reassignOptions.length === 0 ? (
+                            <p className="muted">
+                              No eligible owners are available right now. Ask an admin to update scenario routing.
+                            </p>
+                          ) : (
+                            <>
+                              <label className="field">
+                                <span>New owner</span>
+                                <select className="workflowSelect" defaultValue={reassignmentTargetId} name="newOwnerId" required>
+                                  <option value="">Select an owner</option>
+                                  {reassignOptions.map((option) => (
+                                    <option key={option.value} value={option.value}>
+                                      {option.label}
+                                    </option>
+                                  ))}
+                                </select>
+                              </label>
+                              <label className="field">
+                                <span>Reason for reassignment</span>
+                                <textarea
+                                  defaultValue={ownershipReason}
+                                  minLength={12}
+                                  name="reason"
+                                  required
+                                  rows={4}
+                                />
+                              </label>
+                              <p className="muted">
+                                Use reassignment when the scenario should stay active, but a different operator should own the next step.
+                              </p>
+                              <div className="buttonRow workspaceMutationActions">
+                                <button className="button buttonPrimary" type="submit">
+                                  Submit reassignment
+                                </button>
+                                <Link
+                                  className="button buttonSecondary"
+                                  href={{
+                                    pathname: "/app",
+                                    query: buildWorkspaceQuery({
+                                      view: selectedView,
+                                      scenario: selectedScenario.id,
+                                      scenarioType: queueFilters.scenarioTypeId,
+                                      urgency: queueFilters.urgency,
+                                      owner: queueFilters.ownerId,
+                                      account: queueFilters.accountId,
+                                      freshness: queueFilters.freshness !== "any" ? queueFilters.freshness : undefined,
+                                      sort: queueFilters.sort,
+                                    }),
+                                  }}
+                                >
+                                  Cancel
+                                </Link>
+                              </div>
+                            </>
+                          )}
+                        </form>
+                      ) : null}
+                      {ownershipMode === "escalate" ? (
+                        <form action={escalateScenarioAction} className="workspaceMutationForm">
+                          <WorkspaceContextFields
+                            queueFilters={queueFilters}
+                            selectedScenarioId={selectedScenario.id}
+                            selectedView={selectedView}
+                          />
+                          <input name="ownershipMode" type="hidden" value="escalate" />
+                          <input name="scenarioId" type="hidden" value={selectedScenario.id} />
+                          <label className="field">
+                            <span>Escalation target</span>
+                            <select
+                              className="workflowSelect"
+                              defaultValue={escalationTargetId}
+                              name="escalationTargetId"
+                              required
+                            >
+                              <option value="">Select a target</option>
+                              {workspaceData.ownershipOptions.map((option) => (
+                                <option key={option.value} value={option.value}>
+                                  {option.label}
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+                          <label className="field">
+                            <span>Escalation owner</span>
+                            <select
+                              className="workflowSelect"
+                              defaultValue={escalationOwnerId}
+                              name="escalationOwnerId"
+                              required
+                            >
+                              <option value="">Select an owner</option>
+                              {workspaceData.ownershipOptions.map((option) => (
+                                <option key={option.value} value={option.value}>
+                                  {option.label}
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+                          <label className="field">
+                            <span>Reason for escalation</span>
+                            <textarea
+                              defaultValue={ownershipReason}
+                              minLength={12}
+                              name="reason"
+                              required
+                              rows={4}
+                            />
+                          </label>
+                          <p className="muted">
+                            Use escalation when the current path cannot proceed without higher authority, cross-team action, or exception handling.
+                          </p>
+                          <div className="buttonRow workspaceMutationActions">
+                            <button className="button buttonPrimary" type="submit">
+                              Submit escalation
+                            </button>
+                            <Link
+                              className="button buttonSecondary"
+                              href={{
+                                pathname: "/app",
+                                query: buildWorkspaceQuery({
+                                  view: selectedView,
+                                  scenario: selectedScenario.id,
+                                  scenarioType: queueFilters.scenarioTypeId,
+                                  urgency: queueFilters.urgency,
+                                  owner: queueFilters.ownerId,
+                                  account: queueFilters.accountId,
+                                  freshness: queueFilters.freshness !== "any" ? queueFilters.freshness : undefined,
+                                  sort: queueFilters.sort,
+                                }),
+                              }}
+                            >
+                              Cancel
+                            </Link>
+                          </div>
+                        </form>
+                      ) : null}
+                    </>
+                  )}
                 </article>
               </section>
             </div>

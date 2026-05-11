@@ -110,7 +110,7 @@ Use this section before the Wednesday and Friday scorecard updates so the scorec
 | Linked opportunity | Draft Paperclip issue | Asset type | Current draft state | Owner | Due date | Entered draft date | Review-needed date | Review response due | Ready-for-distribution date | Blocker note |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | EpicVIN vs Carfax comparison criteria table | [AIT-109](/AIT/issues/AIT-109) | comparison brief | review needed | CMO | 2026-05-13 | 2026-05-11 | 2026-05-11 | 2026-05-14 |  | awaiting CEO review on fairness notes and proof requirements |
-| Is EpicVIN legit trust center evidence block | [AIT-110](/AIT/issues/AIT-110) | trust explainer brief | not started | CMO | 2026-05-14 |  |  |  |  | second brief only if the first comparison brief stays on schedule |
+| Is EpicVIN legit trust center evidence block | [AIT-110](/AIT/issues/AIT-110) | trust explainer brief | review needed | CMO | 2026-05-14 | 2026-05-11 | 2026-05-11 | 2026-05-14 |  | awaiting CEO review on trust-proof requirements, support notes, and CTA framing |
 
 ### Draft movement rules
 
@@ -124,7 +124,7 @@ Use this section before the Wednesday and Friday scorecard updates so the scorec
 | Linked asset or opportunity | Prep Paperclip issue | Prep scope | Owner | Due date | Current state | Response or unblock date | Blocker note |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | EpicVIN vs Carfax comparison brief | [AIT-111](/AIT/issues/AIT-111) | [target account confirmation, packaging notes, disclosure copy, and pre-approval draft copy for founder and CMO posts](./ait-111-week-one-distribution-readiness.md) | BusinessAnalyst | 2026-05-14 | in progress | 2026-05-14 | draft copy and account-readiness checklist are prepared in parallel; CMO still needs to confirm founder-channel naming and final distribution posture |
-| EpicVIN vs Carfax comparison brief | [AIT-114](/AIT/issues/AIT-114) | final CEO post package, disclosure language, CTA, and timing recommendation for the founder share | CMO | 2026-05-15 | blocked | 2026-05-15 | waits on the approved comparison brief, then hands an exec-ready package back to the CEO distribution issue |
+| EpicVIN vs Carfax comparison brief | [AIT-114](/AIT/issues/AIT-114) | [final CEO post package, disclosure language, CTA, and timing recommendation for the founder share](./ait-114-ceo-linkedin-distribution-package.md) | CMO | 2026-05-15 | done | 2026-05-11 | founder package is prepared and ready to hand back to the CEO distribution issue |
 | Best Carfax alternatives supporting page brief |  | editor-outreach target list and legitimacy screen | BusinessAnalyst | 2026-05-14 | not started | 2026-05-14 | outreach target list can be prepared before the supporting asset is approved |
 
 ### Distribution-readiness prep rules

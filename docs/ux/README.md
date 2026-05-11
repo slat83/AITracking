@@ -14,6 +14,7 @@ It exists to keep three things visible while engineering starts:
 - `workflow-handoff-template.md`: template for the one canonical UX artifact each user-facing ticket must link before engineering pickup
 - `engineering-ready-checklist.md`: pre-pickup gate for user-facing engineering tickets
 - `intake-draft-workflow-contract.md`: canonical workflow contract for the first intake and draft-review slice
+- `ait-144-scenario-reassignment-escalation-handoff.md`: implementation-ready contract for scenario ownership transfer and escalation inside the workspace rail
 - `universal-crm-scenario-workspace-brief.md`: decision-ready UX structure for the scenario-first CRM workspace
 - `crm-product-concept-and-ux-paradigm.md`: replacement CRM concept and product-level UX paradigm for the next phase
 - `decision-log.md`: canonical record of UX decisions, open questions, and follow-up actions
