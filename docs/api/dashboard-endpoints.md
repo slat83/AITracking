@@ -4,6 +4,8 @@ This document covers the dashboard tracking API routes used by the community mon
 
 Base path: `/api`
 
+Auth session model reference: [agent-api-auth-session-model.md](./agent-api-auth-session-model.md)
+
 ## Access and Auth
 
 - All dashboard endpoints require an authenticated session.
@@ -295,4 +297,3 @@ Success response:
 ```json
 { "ok": false, "error": "Failed to ..." }
 ```
-

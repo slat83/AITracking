@@ -4,6 +4,7 @@ This repository contains the canonical Next.js application for Flowvory. It incl
 
 Documentation and secret-handling rules live in [docs/security/storage-and-worker-policy.md](./docs/security/storage-and-worker-policy.md). Read that policy before adding new runbooks, operator notes, or environment files.
 Dashboard tracking endpoint details live in [docs/api/dashboard-endpoints.md](./docs/api/dashboard-endpoints.md).
+Agent API auth session details live in [docs/api/agent-api-auth-session-model.md](./docs/api/agent-api-auth-session-model.md).
 
 ## Stack
 
