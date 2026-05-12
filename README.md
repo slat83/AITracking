@@ -3,6 +3,7 @@
 This repository contains the canonical Next.js application for Flowvory. It includes the operator workflow CRM foundation described in the planning docs: opportunity intake, drafting, review, and approved distribution across reputation and demand scenarios.
 
 Documentation and secret-handling rules live in [docs/security/storage-and-worker-policy.md](./docs/security/storage-and-worker-policy.md). Read that policy before adding new runbooks, operator notes, or environment files.
+Dashboard tracking endpoint details live in [docs/api/dashboard-endpoints.md](./docs/api/dashboard-endpoints.md).
 
 ## Stack
 
