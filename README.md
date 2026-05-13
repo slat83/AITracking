@@ -4,7 +4,7 @@ This repository contains the canonical Next.js application for Flowvory. It incl
 
 Documentation and secret-handling rules live in [docs/security/storage-and-worker-policy.md](./docs/security/storage-and-worker-policy.md). Read that policy before adding new runbooks, operator notes, or environment files.
 Dashboard tracking endpoint details live in [docs/api/dashboard-endpoints.md](./docs/api/dashboard-endpoints.md).
-Agent API auth session details live in [docs/api/agent-api-auth-session-model.md](./docs/api/agent-api-auth-session-model.md).
+Agent API auth access details live in [docs/api/agent-api-auth-session-model.md](./docs/api/agent-api-auth-session-model.md).
 
 ## Stack
 
@@ -121,3 +121,21 @@ npm run typecheck
 npm run test
 npm run build
 ```
+
+## Keyword Workbook Import
+
+To import workbook keywords through the authenticated dashboard API:
+
+```bash
+DASHBOARD_API_TOKEN=... \
+tsx scripts/import-keyword-workbook.ts ./keywords.xlsx --sheet "All Keywords"
+```
+
+Use `--replace` to replace the tracked keyword set instead of appending:
+
+```bash
+DASHBOARD_API_TOKEN=... \
+tsx scripts/import-keyword-workbook.ts ./keywords.xlsx --replace
+```
+
+Optional: set `DASHBOARD_API_BASE_URL` (or pass `--api-base-url`) when the API is not at `http://localhost:3000/api`.

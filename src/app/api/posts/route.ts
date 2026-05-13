@@ -30,8 +30,8 @@ const answerPostPayloadSchema = z.union([
   }),
 ]);
 
-export async function GET() {
-  const auth = await requireDashboardEditor();
+export async function GET(request: Request) {
+  const auth = await requireDashboardEditor(request);
 
   if (!auth.ok) {
     return auth.response;
@@ -41,7 +41,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const auth = await requireDashboardEditor();
+  const auth = await requireDashboardEditor(request);
 
   if (!auth.ok) {
     return auth.response;
@@ -71,7 +71,7 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE(request: Request) {
-  const auth = await requireDashboardEditor();
+  const auth = await requireDashboardEditor(request);
 
   if (!auth.ok) {
     return auth.response;

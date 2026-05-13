@@ -4,14 +4,15 @@ This document covers the dashboard tracking API routes used by the community mon
 
 Base path: `/api`
 
-Auth session model reference: [agent-api-auth-session-model.md](./agent-api-auth-session-model.md)
+Auth access model reference: [agent-api-auth-session-model.md](./agent-api-auth-session-model.md)
 
 ## Access and Auth
 
-- All dashboard endpoints require an authenticated session.
-- Required role: `EDITOR` or higher.
+- All dashboard endpoints require authenticated access.
+- Agent/integration access: `Authorization: Bearer <DASHBOARD_API_TOKEN>`.
+- Signed-in operator access: NextAuth session cookie with `EDITOR` or `ADMIN` role.
 - Unauthorized response: `401` with `{ "ok": false, "error": "Authentication is required." }`
-- Forbidden response: `403` with `{ "ok": false, "error": "Editor access is required." }`
+- Forbidden response (session role below `EDITOR`): `403` with `{ "ok": false, "error": "Editor access is required." }`
 
 ## `GET /api/keywords`
 
@@ -53,20 +54,33 @@ Accepted payloads:
 { "keywords": ["carfax alternative", "epicvin review"] }
 ```
 
+```json
+{ "keywords": ["carfax alternative", "epicvin review"], "mode": "replace" }
+```
+
 `multipart/form-data` payload:
 
 - `workbook`: file (required)
 - `sheetName`: string (optional)
+- `mode`: `append` (default) or `replace` (optional)
+
+Keyword import modes:
+
+- `append`: add/update provided keywords and keep existing tracked keywords
+- `replace`: replace the tracked keyword set with only the provided keywords
 
 Success response:
 
 ```json
 {
   "ok": true,
+  "mode": "append",
   "importedCount": 2,
   "keywords": []
 }
 ```
+
+`mode` reflects the mode applied by the API (`append` default or `replace` when requested).
 
 ## `DELETE /api/keywords`
 

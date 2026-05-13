@@ -228,6 +228,30 @@ export async function addTrackedKeyword(
   });
 }
 
+export async function replaceTrackedKeywords(
+  keywords: string[],
+  db: DashboardTrackingDb = prisma,
+) {
+  const workspace = await ensureDashboardWorkspace(db);
+  const normalizedKeywords = Array.from(new Set(keywords.map((keyword) => normalizeKeyword(keyword)).filter(Boolean)));
+
+  await db.trackedKeyword.deleteMany({
+    where: { workspaceId: workspace.id },
+  });
+
+  if (normalizedKeywords.length > 0) {
+    await db.trackedKeyword.createMany({
+      data: normalizedKeywords.map((keyword) => ({
+        workspaceId: workspace.id,
+        keyword,
+      })),
+      skipDuplicates: true,
+    });
+  }
+
+  return listTrackedKeywords(db);
+}
+
 export async function removeTrackedKeyword(identifier: KeywordIdentifier, db: DashboardTrackingDb = prisma) {
   const existing = await resolveTrackedKeyword(db, identifier);
 

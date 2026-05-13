@@ -1,6 +1,5 @@
 import { readFile } from "node:fs/promises";
 
-import { addTrackedKeyword, listTrackedKeywords } from "@/server/dashboard/tracking";
 import { extractKeywordsFromWorkbook } from "@/server/dashboard/keyword-workbook";
 
 function parseArgs(argv: string[]) {
@@ -8,7 +7,11 @@ function parseArgs(argv: string[]) {
   const options: {
     filePath?: string;
     sheetName?: string;
-  } = {};
+    apiBaseUrl?: string;
+    mode: "append" | "replace";
+  } = {
+    mode: "append",
+  };
 
   while (args.length > 0) {
     const token = args.shift();
@@ -22,38 +25,78 @@ function parseArgs(argv: string[]) {
       continue;
     }
 
+    if (token === "--api-base-url") {
+      options.apiBaseUrl = args.shift();
+      continue;
+    }
+
+    if (token === "--replace") {
+      options.mode = "replace";
+      continue;
+    }
+
     if (!options.filePath) {
       options.filePath = token;
     }
   }
 
   if (!options.filePath) {
-    throw new Error("Usage: tsx scripts/import-keyword-workbook.ts <workbook.xlsx> [--sheet \"All Keywords\"]");
+    throw new Error(
+      "Usage: tsx scripts/import-keyword-workbook.ts <workbook.xlsx> [--sheet \"All Keywords\"] [--replace] [--api-base-url http://localhost:3000/api]",
+    );
   }
 
-  return options as { filePath: string; sheetName?: string };
+  return options as { filePath: string; sheetName?: string; apiBaseUrl?: string; mode: "append" | "replace" };
+}
+
+function resolveApiBaseUrl(explicitBaseUrl?: string) {
+  const defaultBaseUrl = "http://localhost:3000/api";
+  return (explicitBaseUrl || process.env.DASHBOARD_API_BASE_URL || defaultBaseUrl).replace(/\/+$/, "");
 }
 
 async function main() {
-  const { filePath, sheetName } = parseArgs(process.argv.slice(2));
+  const { filePath, sheetName, apiBaseUrl, mode } = parseArgs(process.argv.slice(2));
+  const token = process.env.DASHBOARD_API_TOKEN;
+
+  if (!token) {
+    throw new Error("DASHBOARD_API_TOKEN is required.");
+  }
+
+  const baseUrl = resolveApiBaseUrl(apiBaseUrl);
   const workbook = await readFile(filePath);
   const { keywords, sheetName: resolvedSheetName, column } = extractKeywordsFromWorkbook(workbook, {
     sheetName,
   });
 
-  for (const keyword of keywords) {
-    await addTrackedKeyword({ keyword });
-  }
+  const response = await fetch(`${baseUrl}/keywords`, {
+    method: "POST",
+    headers: {
+      authorization: `Bearer ${token}`,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      keywords,
+      mode,
+    }),
+  });
+  const payload = await response.json();
 
-  const storedKeywords = await listTrackedKeywords();
+  if (!response.ok) {
+    const message = typeof payload?.error === "string" ? payload.error : "Keyword import request failed.";
+    throw new Error(message);
+  }
+  const appliedMode = payload?.mode === "replace" ? "replace" : "append";
+  const importedCount = typeof payload?.importedCount === "number" ? payload.importedCount : keywords.length;
 
   console.log(JSON.stringify({
     ok: true,
     sourceFile: filePath,
     sheetName: resolvedSheetName,
     column,
-    importedCount: keywords.length,
-    storedKeywordCount: storedKeywords.length,
+    mode: appliedMode,
+    requestedMode: mode,
+    importedCount,
+    storedKeywordCount: Array.isArray(payload?.keywords) ? payload.keywords.length : undefined,
   }, null, 2));
 }
 

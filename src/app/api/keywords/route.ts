@@ -7,6 +7,7 @@ import {
   addTrackedKeyword,
   createTrackedKeywordInputSchema,
   listTrackedKeywords,
+  replaceTrackedKeywords,
   removeTrackedKeyword,
   trackedKeywordIdentifierSchema,
 } from "@/server/dashboard/tracking";
@@ -14,11 +15,15 @@ import {
 export const runtime = "nodejs";
 
 const createKeywordPayloadSchema = z.union([
-  createTrackedKeywordInputSchema,
+  createTrackedKeywordInputSchema.extend({
+    mode: z.enum(["append", "replace"]).optional(),
+  }),
   z.object({
     keywords: z.array(z.string().trim().min(1).max(200)).min(1),
+    mode: z.enum(["append", "replace"]).optional(),
   }),
 ]);
+const keywordImportModeSchema = z.enum(["append", "replace"]).optional();
 
 const deleteKeywordPayloadSchema = z.union([
   trackedKeywordIdentifierSchema,
@@ -38,6 +43,7 @@ async function getCreateKeywordsPayload(request: Request) {
     const formData = await request.formData();
     const workbook = formData.get("workbook");
     const sheetName = formData.get("sheetName");
+    const modeValue = formData.get("mode");
 
     if (!(workbook instanceof File)) {
       throw new z.ZodError([
@@ -48,23 +54,28 @@ async function getCreateKeywordsPayload(request: Request) {
         },
       ]);
     }
+    const mode = keywordImportModeSchema.parse(typeof modeValue === "string" ? modeValue : undefined);
 
     const { keywords } = extractKeywordsFromWorkbook(Buffer.from(await workbook.arrayBuffer()), {
       sheetName: typeof sheetName === "string" ? sheetName : undefined,
     });
 
-    return { keywords };
+    return {
+      keywords,
+      mode: mode === "replace" ? "replace" : "append",
+    } as const;
   }
 
   const json = await request.json();
   const payload = createKeywordPayloadSchema.parse(json);
   return {
     keywords: "keywords" in payload ? payload.keywords : [payload.keyword],
+    mode: payload.mode === "replace" ? "replace" : "append",
   };
 }
 
-export async function GET() {
-  const auth = await requireDashboardEditor();
+export async function GET(request: Request) {
+  const auth = await requireDashboardEditor(request);
 
   if (!auth.ok) {
     return auth.response;
@@ -75,21 +86,25 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const auth = await requireDashboardEditor();
+  const auth = await requireDashboardEditor(request);
 
   if (!auth.ok) {
     return auth.response;
   }
 
   try {
-    const { keywords } = await getCreateKeywordsPayload(request);
+    const { keywords, mode } = await getCreateKeywordsPayload(request);
 
-    for (const keyword of keywords) {
-      await addTrackedKeyword({ keyword });
+    if (mode === "replace") {
+      await replaceTrackedKeywords(keywords);
+    } else {
+      for (const keyword of keywords) {
+        await addTrackedKeyword({ keyword });
+      }
     }
 
     return NextResponse.json(
-      { ok: true, importedCount: keywords.length, keywords: await listTrackedKeywords() },
+      { ok: true, importedCount: keywords.length, mode, keywords: await listTrackedKeywords() },
       { status: 201 },
     );
   } catch (error) {
@@ -106,7 +121,7 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE(request: Request) {
-  const auth = await requireDashboardEditor();
+  const auth = await requireDashboardEditor(request);
 
   if (!auth.ok) {
     return auth.response;
