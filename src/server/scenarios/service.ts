@@ -402,6 +402,9 @@ export async function backfillScenariosFromOpportunities(
       }) => Promise<Array<OpportunityScenarioSource & { sourceName: string }>>;
     };
   },
+  options?: {
+    skipUnresolvableScenarioType?: boolean;
+  },
 ) {
   const opportunities = await db.opportunity.findMany({
     select: {
@@ -421,10 +424,37 @@ export async function backfillScenariosFromOpportunities(
     },
   });
 
+  const unresolved: Array<{ id: string; scenario: string | null }> = [];
+
   for (const opportunity of opportunities) {
-    await syncScenarioFromOpportunity(db, {
-      actorId: opportunity.ownerId ?? null,
-      opportunity,
-    });
+    try {
+      await syncScenarioFromOpportunity(db, {
+        actorId: opportunity.ownerId ?? null,
+        opportunity,
+      });
+    } catch (error) {
+      const shouldSkip =
+        options?.skipUnresolvableScenarioType
+        && error instanceof Error
+        && error.message.includes("Selected scenario type is not available.");
+
+      if (!shouldSkip) {
+        throw error;
+      }
+
+      unresolved.push({
+        id: opportunity.id,
+        scenario: opportunity.scenario,
+      });
+    }
+  }
+
+  if (unresolved.length > 0) {
+    const details = unresolved
+      .map((entry) => `${entry.id} (${entry.scenario ?? "null"})`)
+      .join(", ");
+    console.warn(
+      `Skipped ${unresolved.length} opportunity scenario syncs with unresolved scenario types: ${details}`,
+    );
   }
 }

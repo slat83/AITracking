@@ -157,6 +157,69 @@ function getPrerequisiteTone(status: ScenarioPrerequisiteStatus) {
   return "warning";
 }
 
+function trimText(value: string | null | undefined) {
+  const normalized = value?.trim();
+  return normalized && normalized.length > 0 ? normalized : null;
+}
+
+function resolveNextActionFallback(input: {
+  status: ScenarioStatus;
+  proofReadiness: ProofReadiness;
+  approvalStatus: ApprovalStatus;
+  blockedReason: string | null;
+  tasks: Array<{
+    title: string;
+    status: TaskStatus;
+  }>;
+  recommendedNextAction: string | null;
+  playbookRecommendedNextAction: string | null;
+}) {
+  const configuredNextAction =
+    trimText(input.recommendedNextAction) ?? trimText(input.playbookRecommendedNextAction);
+
+  if (configuredNextAction) {
+    return configuredNextAction;
+  }
+
+  const openTask = input.tasks.find((task) => task.status === "TODO" || task.status === "IN_PROGRESS" || task.status === "BLOCKED");
+  const openTaskLabel = openTask ? trimText(openTask.title) : null;
+  if (openTaskLabel) {
+    return openTaskLabel;
+  }
+
+  if (input.approvalStatus === "PENDING" || input.approvalStatus === "REJECTED") {
+    return input.blockedReason ?? "Resolve approval before execution can continue.";
+  }
+
+  if (input.blockedReason) {
+    return `Resolve blocker: ${input.blockedReason}`;
+  }
+
+  if (
+    input.status === "INTAKE"
+    || input.status === "TRIAGE"
+  ) {
+    return "Qualify the scenario and complete missing context.";
+  }
+
+  if (
+    input.status === "READY_FOR_DRAFT"
+    || input.status === "ACTIVE"
+    || input.status === "BLOCKED"
+  ) {
+    if (input.proofReadiness !== "READY") {
+      return "Close proof gaps before execution continues.";
+    }
+    return "Run the next execution step for this scenario.";
+  }
+
+  if (input.status === "IN_OBSERVATION") {
+    return "Capture outcome and decide whether a follow-up is required.";
+  }
+
+  return "Review the scenario context and choose the next operator action.";
+}
+
 function buildTimeline(selectedScenario: WorkspaceScenario) {
   const childArtifacts = getWorkspaceChildArtifacts(selectedScenario);
   return [
@@ -360,6 +423,24 @@ export default async function WorkspacePage({ searchParams }: PageProps) {
   const scenarioIsReadOnly = Boolean(
     selectedScenario && (selectedScenario.status === "ARCHIVED" || selectedScenario.status === "RESOLVED"),
   );
+  const resolveNextAction = (scenario: (typeof workspaceData.scenarios)[number] | null) => {
+    if (!scenario) {
+      return "Review the scenario context and choose the next operator action.";
+    }
+
+    return resolveNextActionFallback({
+      status: scenario.status,
+      proofReadiness: scenario.proofReadiness,
+      approvalStatus: scenario.approvalStatus,
+      blockedReason: scenario.blockedReason,
+      tasks: scenario.tasks.map((task) => ({
+        title: task.title,
+        status: task.status,
+      })),
+      recommendedNextAction: scenario.recommendedNextAction,
+      playbookRecommendedNextAction: scenario.playbook?.recommendedNextAction ?? null,
+    });
+  };
   const reassignOptions = workspaceData.ownershipOptions.filter((option) => option.value !== selectedScenario?.owner?.id);
   const escalationButtonLabel = latestEscalation ? "Update escalation" : "Escalate";
 
@@ -432,7 +513,7 @@ export default async function WorkspacePage({ searchParams }: PageProps) {
           <span className="metaLabel">What should happen next</span>
           <p>
             {selectedScenario
-              ? selectedScenario.recommendedNextAction ?? selectedScenario.playbook?.recommendedNextAction ?? "Review the scenario and set the next operator action."
+              ? resolveNextAction(selectedScenario)
               : "Choose a scenario to see the recommended next action and proof requirements."}
           </p>
         </article>
@@ -599,7 +680,7 @@ export default async function WorkspacePage({ searchParams }: PageProps) {
                       <span>{scenario.owner?.name ?? "Unassigned"}</span>
                     </div>
                     <p className="workspaceQueueAction">
-                      Next: {scenario.recommendedNextAction ?? scenario.playbook?.recommendedNextAction ?? "Review the scenario context."}
+                      Next: {resolveNextAction(scenario)}
                     </p>
                     <div className="workspaceBadgeRow">
                       <span className="pill">{formatEnumLabel(scenario.proofReadiness)}</span>
@@ -826,10 +907,10 @@ export default async function WorkspacePage({ searchParams }: PageProps) {
                 </div>
                 <article className="workspaceOutcomeCard">
                   <div className="workspaceOutcomeGrid">
-                    <div>
-                      <span className="metaLabel">Last action taken</span>
-                      <p>{selectedScenario.recommendedNextAction ?? "No recommended action recorded."}</p>
-                    </div>
+                  <div>
+                    <span className="metaLabel">Last action taken</span>
+                    <p>{resolveNextAction(selectedScenario)}</p>
+                  </div>
                     <div>
                       <span className="metaLabel">Observed result</span>
                       <p>{selectedScenario.outcome?.summary ?? "Outcome not recorded yet."}</p>
@@ -861,9 +942,7 @@ export default async function WorkspacePage({ searchParams }: PageProps) {
                 <h2>Next best action</h2>
                 <article className="workspaceActionCard">
                   <strong>
-                    {selectedScenario.recommendedNextAction
-                      ?? selectedScenario.playbook?.recommendedNextAction
-                      ?? "Review scenario context and choose the next operator action."}
+                    {resolveNextAction(selectedScenario)}
                   </strong>
                   <p className="muted">
                     {selectedScenario.playbook?.proofGuidance

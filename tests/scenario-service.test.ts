@@ -2,6 +2,7 @@ import { OpportunityPriority, OpportunityStatus, ScenarioStatus } from "@prisma/
 import { describe, expect, it, vi } from "vitest";
 
 import {
+  backfillScenariosFromOpportunities,
   buildScenarioTypeLookupKey,
   getScenarioTypeOptionLabel,
   mapOpportunityStatusToScenarioStatus,
@@ -116,5 +117,87 @@ describe("scenario service", () => {
         actorId: "user-1",
       }),
     });
+  });
+
+  it("skips unresolved scenarios during backfill when explicitly configured", async () => {
+    const scenarioUpsert = vi.fn().mockResolvedValue({ id: "scenario-1" });
+    const warning = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    await backfillScenariosFromOpportunities(
+      {
+        workspace: {
+          upsert: vi.fn().mockResolvedValue({ id: "workspace-1" }),
+        },
+        account: {
+          upsert: vi.fn().mockResolvedValue({ id: "account-1" }),
+        },
+        scenarioType: {
+          findMany: vi.fn().mockResolvedValue([
+            {
+              id: "type-1",
+              slug: "trust-and-legitimacy-validation",
+              name: "Trust and legitimacy validation",
+              family: "trust_and_legitimacy_validation",
+              launchLabel: "is EpicVIN legit",
+              isActive: true,
+            },
+          ]),
+        },
+        playbook: {
+          findFirst: vi.fn().mockResolvedValue({
+            id: "playbook-1",
+            recommendedNextAction: "Gather proof and update trust assets.",
+          }),
+        },
+        scenario: {
+          findUnique: vi.fn().mockResolvedValue(null),
+          upsert: scenarioUpsert,
+        },
+        auditEvent: {
+          create: vi.fn().mockResolvedValue(undefined),
+        },
+        opportunity: {
+          findMany: vi.fn().mockResolvedValue([
+            {
+              id: "opp-1",
+              title: "Known scenario",
+              summary: "Mapped scenario value.",
+              sourceName: "Manual intake",
+              scenario: "is EpicVIN legit",
+              whyNow: "Urgent trust objection",
+              suggestedAssetAngle: "Trust asset",
+              briefQuestion: "What proof is required?",
+              proofRequirement: "Customer proof",
+              status: OpportunityStatus.TRIAGE,
+              priority: OpportunityPriority.HIGH,
+              ownerId: "user-1",
+              capturedAt: new Date("2026-05-10T12:00:00.000Z"),
+            },
+            {
+              id: "opp-2",
+              title: "Legacy null scenario",
+              summary: "Missing scenario selection.",
+              sourceName: "Legacy import",
+              scenario: null,
+              whyNow: "Needs classification",
+              suggestedAssetAngle: "Fill intake",
+              briefQuestion: "Which scenario applies?",
+              proofRequirement: "N/A",
+              status: OpportunityStatus.INTAKE,
+              priority: OpportunityPriority.MEDIUM,
+              ownerId: null,
+              capturedAt: new Date("2026-05-10T12:00:00.000Z"),
+            },
+          ]),
+        },
+      },
+      {
+        skipUnresolvableScenarioType: true,
+      },
+    );
+
+    expect(scenarioUpsert).toHaveBeenCalledTimes(1);
+    expect(warning).toHaveBeenCalledTimes(1);
+    warning.mockRestore();
   });
 });

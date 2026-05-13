@@ -1,13 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const requireDashboardEditor = vi.fn();
+const requireDashboardPermission = vi.fn();
 const addTrackedKeyword = vi.fn();
 const listTrackedKeywords = vi.fn();
 const replaceTrackedKeywords = vi.fn();
 const extractKeywordsFromWorkbook = vi.fn();
 
 vi.mock("@/server/dashboard/api-auth", () => ({
-  requireDashboardEditor,
+  requireDashboardPermission,
 }));
 
 vi.mock("@/server/dashboard/tracking", async () => {
@@ -28,13 +28,13 @@ vi.mock("@/server/dashboard/keyword-workbook", () => ({
 
 describe("POST /api/keywords", () => {
   beforeEach(() => {
-    requireDashboardEditor.mockReset();
+    requireDashboardPermission.mockReset();
     addTrackedKeyword.mockReset();
     listTrackedKeywords.mockReset();
     replaceTrackedKeywords.mockReset();
     extractKeywordsFromWorkbook.mockReset();
 
-    requireDashboardEditor.mockResolvedValue({
+    requireDashboardPermission.mockResolvedValue({
       ok: true,
       session: {
         user: {
@@ -61,6 +61,7 @@ describe("POST /api/keywords", () => {
     const body = await response.json();
 
     expect(response.status).toBe(201);
+    expect(requireDashboardPermission).toHaveBeenCalledWith(expect.any(Request), "dashboard:write");
     expect(addTrackedKeyword).toHaveBeenCalledTimes(2);
     expect(addTrackedKeyword).toHaveBeenNthCalledWith(1, { keyword: "best carfax alternative" });
     expect(addTrackedKeyword).toHaveBeenNthCalledWith(2, { keyword: "carfax vs epicvin" });
@@ -90,6 +91,7 @@ describe("POST /api/keywords", () => {
     const body = await response.json();
 
     expect(response.status).toBe(201);
+    expect(requireDashboardPermission).toHaveBeenCalledWith(expect.any(Request), "dashboard:write");
     expect(extractKeywordsFromWorkbook).toHaveBeenCalledTimes(1);
     expect(addTrackedKeyword).toHaveBeenCalledTimes(2);
     expect(body.importedCount).toBe(2);
@@ -118,6 +120,7 @@ describe("POST /api/keywords", () => {
     const body = await response.json();
 
     expect(response.status).toBe(201);
+    expect(requireDashboardPermission).toHaveBeenCalledWith(expect.any(Request), "dashboard:write");
     expect(replaceTrackedKeywords).toHaveBeenCalledWith(["best carfax alternative", "carfax vs epicvin"]);
     expect(addTrackedKeyword).not.toHaveBeenCalled();
     expect(body.mode).toBe("replace");
@@ -138,6 +141,7 @@ describe("POST /api/keywords", () => {
     const body = await response.json();
 
     expect(response.status).toBe(400);
+    expect(requireDashboardPermission).toHaveBeenCalledWith(expect.any(Request), "dashboard:write");
     expect(body.ok).toBe(false);
     expect(addTrackedKeyword).not.toHaveBeenCalled();
     expect(replaceTrackedKeywords).not.toHaveBeenCalled();
@@ -158,6 +162,7 @@ describe("POST /api/keywords", () => {
     const body = await response.json();
 
     expect(response.status).toBe(201);
+    expect(requireDashboardPermission).toHaveBeenCalledWith(expect.any(Request), "dashboard:write");
     expect(replaceTrackedKeywords).toHaveBeenCalledTimes(1);
     expect(replaceTrackedKeywords).toHaveBeenCalledWith(["best carfax alternative", "carfax vs epicvin"]);
     expect(addTrackedKeyword).not.toHaveBeenCalled();

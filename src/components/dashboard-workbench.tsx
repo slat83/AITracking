@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 type DashboardKeywordRecord = {
   id: string;
@@ -141,6 +141,16 @@ type DashboardLoadSections = {
   posts: PromiseSettledResult<{ postsToAnswer: DashboardPostRecord[]; answeredPosts: DashboardPostRecord[] }>;
 };
 
+type CommandAction = {
+  id: string;
+  command: string;
+  item: string;
+  owner: string;
+  publishOrder: number;
+  status: "Planned" | "Queued" | "Executing" | "Done";
+  amplificationPriority: "High" | "Medium" | "Low";
+};
+
 export function buildDashboardLoadResult(results: DashboardLoadSections): DashboardLoadResult {
   const errors: string[] = [];
 
@@ -175,11 +185,99 @@ export function DashboardWorkbench({ initialDashboard = EMPTY_DASHBOARD }: Dashb
   const [loading, setLoading] = useState(false);
   const [pendingAction, setPendingAction] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [singleCommand, setSingleCommand] = useState("Launch coordinated campaign");
+  const [activeCommand, setActiveCommand] = useState("Launch coordinated campaign");
 
   const filteredKeywords = filterKeywords(dashboard.keywords, search.keywords);
   const filteredThreads = filterThreads(dashboard.threads, search.threads);
   const filteredPostsToAnswer = filterPosts(dashboard.postsToAnswer, search.postsToAnswer);
   const filteredAnsweredPosts = filterPosts(dashboard.answeredPosts, search.answeredPosts);
+
+  const commandPlan = useMemo<CommandAction[]>(() => {
+    const owners = ["Founder", "Company profile", "Employee advocate"];
+    const sourcePriority = dashboard.postsToAnswer.slice(0, 3).map((post, index) => {
+      return {
+        id: `plan-post-${post.id}`,
+        command: activeCommand,
+        item: `Post: ${post.title ?? post.url}`,
+        owner: owners[index % owners.length],
+        publishOrder: index + 1,
+        status: "Queued" as const,
+        amplificationPriority: index < 1 ? "High" : index === 1 ? "Medium" : "Low",
+      };
+    });
+
+    const answeredItems = dashboard.answeredPosts.slice(0, 2).map((post, index) => ({
+      id: `plan-answered-${post.id}`,
+      command: activeCommand,
+      item: `Post: ${post.title ?? post.url}`,
+      owner: owners[(index + 1) % owners.length],
+      publishOrder: sourcePriority.length + index + 1,
+      status: "Done" as const,
+      amplificationPriority: "Low" as const,
+    }));
+
+    if (sourcePriority.length > 0) {
+      if (answeredItems.length > 0) {
+        answeredItems[0] = {
+          ...answeredItems[0],
+          status: "Done",
+        };
+      }
+      return [...sourcePriority, ...answeredItems];
+    }
+
+    const keywordPlan = dashboard.keywords.slice(0, 3).map((keyword, index) => ({
+      id: `plan-keyword-${keyword.id}`,
+      command: activeCommand,
+      item: `Create a post angle from keyword: ${keyword.keyword}`,
+      owner: owners[index % owners.length],
+      publishOrder: index + 1,
+      status: "Planned" as const,
+      amplificationPriority: index < 1 ? "High" : index === 1 ? "Medium" : "Low",
+    }));
+
+    if (dashboard.threads.length > 0) {
+      return [
+        ...keywordPlan,
+        ...dashboard.threads.slice(0, 2).map((thread, index) => ({
+          id: `plan-thread-${thread.id}`,
+          command: activeCommand,
+          item: `Share supporting insight from thread: ${thread.title ?? thread.url}`,
+          owner: owners[(index + keywordPlan.length) % owners.length],
+          publishOrder: keywordPlan.length + index + 1,
+          status: "Planned" as const,
+          amplificationPriority: "Medium" as const,
+        })),
+      ];
+    }
+
+    return [
+      {
+        id: "plan-empty",
+        command: activeCommand,
+        item: "No active inputs yet. Add keywords or tracked posts to build a plan.",
+        owner: "Founder",
+        publishOrder: 1,
+        status: "Planned",
+        amplificationPriority: "Medium",
+      },
+      {
+        id: "plan-empty-support",
+        command: activeCommand,
+        item: "Run command after adding sources to generate concrete actions.",
+        owner: "Employee advocate",
+        publishOrder: 2,
+        status: "Planned",
+        amplificationPriority: "Low",
+      },
+    ];
+  }, [activeCommand, dashboard.keywords, dashboard.threads, dashboard.postsToAnswer, dashboard.answeredPosts]);
+
+  const nextAction = useMemo(
+    () => commandPlan.find((action) => action.status === "Queued" || action.status === "Planned") ?? null,
+    [commandPlan],
+  );
 
   function updateSearchState(section: keyof DashboardSearchState, value: string) {
     setSearch((current) => ({
@@ -412,6 +510,67 @@ export function DashboardWorkbench({ initialDashboard = EMPTY_DASHBOARD }: Dashb
 
   return (
     <>
+      <section className="card dashboardCard workflowMessage workflowMessageNotice">
+        <div className="shellSectionHeader">
+          <div>
+            <h2>Single-command execution queue</h2>
+            <p className="muted" style={{ marginTop: 8 }}>
+              Enter one campaign command, then use one queue for what to publish, who posts, when, and what gets extra push.
+            </p>
+          </div>
+        </div>
+        <div className="workflowFormGrid">
+          <label className="field">
+            <span>Campaign command</span>
+            <input
+              disabled={loading}
+              onChange={(event) => setSingleCommand(event.target.value)}
+              placeholder="e.g., Launch winter offer campaign"
+              value={singleCommand}
+            />
+          </label>
+          <div className="buttonRow">
+            <button
+              className="button buttonPrimary"
+              disabled={loading}
+              onClick={() => setActiveCommand(singleCommand.trim() || "Launch coordinated campaign")}
+              type="button"
+            >
+              Generate plan
+            </button>
+          </div>
+        </div>
+
+        <div className="workspaceChecklist workspaceChecklistScrollable" style={{ marginTop: 16 }}>
+          {nextAction ? (
+            <div style={{ marginBottom: 10 }} className="muted">
+              Next recommended action: <strong>{nextAction.item}</strong> · <strong>{nextAction.owner}</strong> · {nextAction.status}
+            </div>
+          ) : null}
+          {commandPlan.length === 0 ? (
+            <div className="workspaceEmptyState">
+              <strong>No actions in this command plan.</strong>
+            </div>
+          ) : (
+            commandPlan.map((action) => (
+              <article className="workspaceChecklistItem" key={action.id}>
+                <div className="workspaceChecklistHeader">
+                  <div>
+                    <strong>{action.item}</strong>
+                    <p className="muted">
+                      Owner: {action.owner} · Publish order: #{action.publishOrder}
+                    </p>
+                    <p className="muted">Amplification: {action.amplificationPriority}</p>
+                    <p className="muted">Command: {action.command}</p>
+                  </div>
+                  <span className="pill">{action.status}</span>
+                </div>
+              </article>
+            ))
+          )}
+        </div>
+      </section>
+
       <section className="statsGrid dashboardHeader workspaceStats">
         <article className="card dashboardCard">
           <p className="muted">Tracked keywords</p>

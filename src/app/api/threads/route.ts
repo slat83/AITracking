@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { requireDashboardEditor } from "@/server/dashboard/api-auth";
+import { requireDashboardPermission } from "@/server/dashboard/api-auth";
 import {
   addTrackedThread,
   createTrackedThreadInputSchema,
@@ -31,7 +31,7 @@ const deleteThreadPayloadSchema = z.union([
 ]);
 
 export async function GET(request: Request) {
-  const auth = await requireDashboardEditor(request);
+  const auth = await requireDashboardPermission(request, "dashboard:read");
 
   if (!auth.ok) {
     return auth.response;
@@ -42,7 +42,7 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const auth = await requireDashboardEditor(request);
+  const auth = await requireDashboardPermission(request, "dashboard:write");
 
   if (!auth.ok) {
     return auth.response;
@@ -72,7 +72,7 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE(request: Request) {
-  const auth = await requireDashboardEditor(request);
+  const auth = await requireDashboardPermission(request, "dashboard:write");
 
   if (!auth.ok) {
     return auth.response;
