@@ -2,6 +2,11 @@ name: Sync Dashboard API Token
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - ait-232-normalize-main-workspace
+    paths:
+      - .github/workflows/sync-dashboard-token.yml
 
 concurrency:
   group: production-dashboard-token-sync
