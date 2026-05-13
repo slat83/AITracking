@@ -193,6 +193,16 @@ export function DashboardWorkbench({ initialDashboard = EMPTY_DASHBOARD }: Dashb
   const filteredPostsToAnswer = filterPosts(dashboard.postsToAnswer, search.postsToAnswer);
   const filteredAnsweredPosts = filterPosts(dashboard.answeredPosts, search.answeredPosts);
 
+  const resolvePriority = (index: number): CommandAction["amplificationPriority"] => {
+    if (index < 1) {
+      return "High";
+    }
+    if (index === 1) {
+      return "Medium";
+    }
+    return "Low";
+  };
+
   const commandPlan = useMemo<CommandAction[]>(() => {
     const owners = ["Founder", "Company profile", "Employee advocate"];
     const sourcePriority = dashboard.postsToAnswer.slice(0, 3).map((post, index) => {
@@ -203,7 +213,7 @@ export function DashboardWorkbench({ initialDashboard = EMPTY_DASHBOARD }: Dashb
         owner: owners[index % owners.length],
         publishOrder: index + 1,
         status: "Queued" as const,
-        amplificationPriority: index < 1 ? "High" : index === 1 ? "Medium" : "Low",
+        amplificationPriority: resolvePriority(index),
       };
     });
 
@@ -234,7 +244,7 @@ export function DashboardWorkbench({ initialDashboard = EMPTY_DASHBOARD }: Dashb
       owner: owners[index % owners.length],
       publishOrder: index + 1,
       status: "Planned" as const,
-      amplificationPriority: index < 1 ? "High" : index === 1 ? "Medium" : "Low",
+      amplificationPriority: resolvePriority(index),
     }));
 
     if (dashboard.threads.length > 0) {
