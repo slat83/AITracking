@@ -4,15 +4,37 @@ This document covers the dashboard tracking API routes used by the community mon
 
 Base path: `/api`
 
-Auth access model reference: [agent-api-auth-session-model.md](./agent-api-auth-session-model.md)
-
 ## Access and Auth
 
 - All dashboard endpoints require authenticated access.
 - Agent/integration access: `Authorization: Bearer <DASHBOARD_API_TOKEN>`.
 - Signed-in operator access: NextAuth session cookie with `EDITOR` or `ADMIN` role.
+- Bearer tokens are validated with constant-time comparison against `process.env.DASHBOARD_API_TOKEN`.
+- If a bearer token is sent and `DASHBOARD_API_TOKEN` is not configured, the API returns `500` with `{ "ok": false, "error": "DASHBOARD_API_TOKEN is not configured." }`.
 - Unauthorized response: `401` with `{ "ok": false, "error": "Authentication is required." }`
 - Forbidden response (session role below `EDITOR`): `403` with `{ "ok": false, "error": "Editor access is required." }`
+
+### Authorization decision order
+
+For protected dashboard routes, authorization executes in this order:
+
+1. Parse `Authorization` and accept only `Bearer <token>` with one token segment.
+2. If a bearer token is present:
+3. Read `DASHBOARD_API_TOKEN` from env.
+4. Return `500` if token config is missing.
+5. Return `401` if token does not match.
+6. Treat request as authenticated `EDITOR` principal when token matches.
+7. If bearer token is absent:
+8. Resolve NextAuth server session.
+9. Return `401` when no session/user exists.
+10. Return `403` when session role is below `EDITOR`.
+11. Otherwise allow the request with session principal context.
+
+### Operational constraints
+
+- The token model is currently a single shared secret per environment.
+- There is no in-app token rotation, token registry, or fine-grained scope model yet.
+- Keep `DASHBOARD_API_TOKEN` out of git, docs, and ticket attachments.
 
 ## `GET /api/keywords`
 
@@ -140,7 +162,7 @@ Response:
 
 ## `POST /api/threads`
 
-Creates or upserts tracked threads.
+Appends tracked threads. Re-adding the same URL creates an additional tracking record (it does not overwrite history).
 
 - Method: `POST`
 - Success: `201`
@@ -228,7 +250,7 @@ Response:
 
 ## `POST /api/posts`
 
-Creates or upserts tracked posts. If an existing post is re-added, it is reset to unanswered (`answeredAt = null`).
+Appends tracked posts. Re-adding the same URL creates a new unanswered tracking record (it does not overwrite history).
 
 - Method: `POST`
 - Success: `201`
