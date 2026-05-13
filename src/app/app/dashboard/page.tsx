@@ -14,25 +14,17 @@ export default async function DashboardPage() {
       <header className="topbar workspaceHeader">
         <div className="topbarInner workspaceHeaderInner">
           <div>
-            <div className="eyebrow">Secondary operator view</div>
+            <div className="eyebrow">Operator workflow</div>
             <h1 style={{ fontSize: "2.5rem", margin: "12px 0 0" }}>Community monitoring dashboard</h1>
             <p className="muted workspaceIntro">
-              This view supports channel monitoring, but it no longer anchors the product shell.
-              The scenario workspace remains the primary operating surface.
+              This shell is intentionally scoped to tracked Reddit keywords, threads, and posts.
             </p>
           </div>
           <div className="workspaceHeaderActions">
             <div className="pill">{session.user.role}</div>
           </div>
         </div>
-        <AppShellNav
-          activeKey="workspace"
-          activeSecondaryKey="dashboard"
-          secondaryItems={[
-            { key: "dashboard", label: "Community dashboard", href: "/app/dashboard" },
-            { key: "pilots", label: "Pilot operations", href: "/app/pilots" },
-          ]}
-        />
+        <AppShellNav activeKey="dashboard" />
       </header>
       <DashboardWorkbench initialDashboard={dashboard} />
     </main>

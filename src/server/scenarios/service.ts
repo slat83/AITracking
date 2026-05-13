@@ -13,6 +13,12 @@ import {
 const DEFAULT_WORKSPACE_SLUG = "default-workspace";
 const DEFAULT_ACCOUNT_SLUG = "default-launch-account";
 
+function normalizeRecommendedNextAction(value: string | null | undefined) {
+  const trimmed = value?.trim();
+
+  return trimmed && trimmed.length > 0 ? trimmed : null;
+}
+
 type ScenarioTypeOption = {
   id: string;
   slug: string;
@@ -79,8 +85,9 @@ type ScenarioSyncDb = {
       select: {
         id: true;
         triagedAt: true;
+        recommendedNextAction: true;
       };
-    }) => Promise<{ id: string; triagedAt: Date | null } | null>;
+    }) => Promise<{ id: string; triagedAt: Date | null; recommendedNextAction: string | null } | null>;
     upsert: (args: {
       where: { sourceOpportunityId: string };
       update: Prisma.ScenarioUpdateInput;
@@ -235,6 +242,7 @@ export async function syncScenarioFromOpportunity(
     select: {
       id: true,
       triagedAt: true,
+      recommendedNextAction: true,
     },
   });
   const scenarioType = resolveScenarioTypeOption(scenarioTypes, input.opportunity.scenario);
@@ -256,9 +264,11 @@ export async function syncScenarioFromOpportunity(
   });
 
   const priority = mapOpportunityPriority(input.opportunity.priority);
-  const recommendedNextAction =
-    input.opportunity.suggestedAssetAngle
-    ?? playbook?.recommendedNextAction
+  const baseRecommendedNextAction = normalizeRecommendedNextAction(input.opportunity.suggestedAssetAngle);
+  const resolvedRecommendedNextAction =
+    baseRecommendedNextAction
+    ?? normalizeRecommendedNextAction(playbook?.recommendedNextAction)
+    ?? normalizeRecommendedNextAction(existingScenario?.recommendedNextAction)
     ?? null;
 
   const proofReadiness = input.opportunity.proofRequirement
@@ -305,7 +315,7 @@ export async function syncScenarioFromOpportunity(
       signalSummary: `${input.opportunity.sourceName ?? ""}`.trim()
         ? `${input.opportunity.sourceName}: ${input.opportunity.summary}`
         : input.opportunity.summary,
-      recommendedNextAction,
+      recommendedNextAction: resolvedRecommendedNextAction,
       owner: input.opportunity.ownerId
         ? {
             connect: { id: input.opportunity.ownerId },
@@ -347,7 +357,7 @@ export async function syncScenarioFromOpportunity(
       signalSummary: `${input.opportunity.sourceName ?? ""}`.trim()
         ? `${input.opportunity.sourceName}: ${input.opportunity.summary}`
         : input.opportunity.summary,
-      recommendedNextAction,
+      recommendedNextAction: resolvedRecommendedNextAction,
       owner: input.opportunity.ownerId
         ? {
             connect: { id: input.opportunity.ownerId },

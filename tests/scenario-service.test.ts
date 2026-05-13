@@ -119,6 +119,70 @@ describe("scenario service", () => {
     });
   });
 
+  it("preserves existing next action when incoming opportunity has no suggested asset angle", async () => {
+    const scenarioUpsert = vi.fn().mockResolvedValue({ id: "scenario-2" });
+
+    await syncScenarioFromOpportunity(
+      {
+        workspace: {
+          upsert: vi.fn().mockResolvedValue({ id: "workspace-1" }),
+        },
+        account: {
+          upsert: vi.fn().mockResolvedValue({ id: "account-1" }),
+        },
+        scenarioType: {
+          findMany: vi.fn().mockResolvedValue([
+            {
+              id: "type-1",
+              slug: "trust-and-legitimacy-validation",
+              name: "Trust and legitimacy validation",
+              family: "trust_and_legitimacy_validation",
+              launchLabel: "is EpicVIN legit",
+              isActive: true,
+            },
+          ]),
+        },
+        playbook: {
+          findFirst: vi.fn().mockResolvedValue(null),
+        },
+        scenario: {
+          findUnique: vi.fn().mockResolvedValue({
+            id: "scenario-2",
+            triagedAt: new Date("2026-05-01T00:00:00.000Z"),
+            recommendedNextAction: "Retained operator-guided next step.",
+          }),
+          upsert: scenarioUpsert,
+        },
+        auditEvent: {
+          create: vi.fn().mockResolvedValue(undefined),
+        },
+      },
+      {
+        actorId: "user-2",
+        opportunity: {
+          id: "opp-1",
+          title: "Update customer trust flow",
+          summary: "Reinforce trust positioning with stronger guidance.",
+          sourceName: "Manual intake",
+          scenario: "is EpicVIN legit",
+          whyNow: "Trust objections are increasing.",
+          suggestedAssetAngle: null,
+          briefQuestion: "What proof is required?",
+          proofRequirement: "Use customer proof only.",
+          status: OpportunityStatus.READY_FOR_DRAFT,
+          priority: OpportunityPriority.MEDIUM,
+          ownerId: "user-2",
+          capturedAt: new Date("2026-05-10T12:00:00.000Z"),
+        },
+      },
+    );
+
+    expect(scenarioUpsert).toHaveBeenCalledTimes(1);
+    expect(scenarioUpsert.mock.calls[0][0].update.recommendedNextAction).toBe(
+      "Retained operator-guided next step.",
+    );
+  });
+
   it("skips unresolved scenarios during backfill when explicitly configured", async () => {
     const scenarioUpsert = vi.fn().mockResolvedValue({ id: "scenario-1" });
     const warning = vi.spyOn(console, "warn").mockImplementation(() => {});

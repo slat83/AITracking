@@ -378,6 +378,8 @@ export default async function WorkspacePage({ searchParams }: PageProps) {
     );
   }
 
+  redirect("/app/dashboard");
+
   const workspaceData = await getScenarioWorkspaceData(prisma, {
     userId: session.user.id,
     view: selectedView,
@@ -793,7 +795,7 @@ export default async function WorkspacePage({ searchParams }: PageProps) {
                     <span className="metaLabel">Originating intake</span>
                     <p>
                       {selectedScenario.sourceOpportunity
-                        ? `${selectedScenario.sourceOpportunity.title} · ${formatEnumLabel(selectedScenario.sourceOpportunity.status)}`
+                        ? `${selectedScenario.sourceOpportunity?.title ?? "Untitled intake"} · ${formatEnumLabel(selectedScenario.sourceOpportunity?.status ?? "INTAKE")}`
                         : "This scenario no longer has a linked intake record."}
                     </p>
                     {selectedScenario.sourceOpportunity ? (
@@ -801,7 +803,7 @@ export default async function WorkspacePage({ searchParams }: PageProps) {
                         className="button buttonSecondary"
                         href={{
                           pathname: "/app/opportunities",
-                          query: { opportunity: selectedScenario.sourceOpportunity.id },
+                          query: { opportunity: selectedScenario.sourceOpportunity!.id },
                         }}
                       >
                         Open intake record
@@ -958,7 +960,7 @@ export default async function WorkspacePage({ searchParams }: PageProps) {
                         className="button buttonPrimary"
                         href={{
                           pathname: "/app/opportunities",
-                          query: { opportunity: selectedScenario.sourceOpportunity.id },
+                          query: { opportunity: selectedScenario.sourceOpportunity!.id },
                         }}
                       >
                         Back to intake queue
@@ -1073,7 +1075,7 @@ export default async function WorkspacePage({ searchParams }: PageProps) {
                   </p>
                   <p className="muted">
                     {latestEscalation
-                      ? `Current escalation: ${latestEscalation.targetLabel}`
+                      ? `Current escalation: ${latestEscalation?.targetLabel ?? "Escalation target unavailable"}`
                       : "No active escalation has been recorded yet."}
                   </p>
                   {latestOwnershipEvent ? (

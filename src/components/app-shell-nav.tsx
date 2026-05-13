@@ -2,15 +2,16 @@ import Link from "next/link";
 import type { ComponentProps } from "react";
 
 const APP_SHELL_PRIMARY_NAV_ITEMS = [
-  { key: "workspace", label: "Workspace", href: "/app" },
-  { key: "evidence", label: "Evidence", href: "/app/evidence" },
-  { key: "playbooks", label: "Playbooks", href: "/app/playbooks" },
-  { key: "templates", label: "Templates", href: "/app/templates" },
-  { key: "reporting", label: "Reporting", href: "/app/reporting" },
-  { key: "settings", label: "Settings", href: "/app/settings" },
+  { key: "dashboard", label: "Reddit workflow", href: "/app/dashboard" },
 ] as const;
 
-export type AppShellNavKey = (typeof APP_SHELL_PRIMARY_NAV_ITEMS)[number]["key"];
+export type AppShellNavKey = (typeof APP_SHELL_PRIMARY_NAV_ITEMS)[number]["key"]
+| "workspace"
+| "evidence"
+| "playbooks"
+| "templates"
+| "reporting"
+| "settings";
 
 type AppShellSecondaryItem = {
   key: string;
