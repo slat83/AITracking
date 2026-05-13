@@ -31,6 +31,41 @@ What changes in scope, implementation, content, or review because of this decisi
 
 ## Decisions
 
+## UXD-008: Define the minimal functional application as one public path plus two role-specific workspaces
+
+- Date: 2026-05-13
+- Related issue: [AIT-236](/issues/AIT-236)
+- Status: accepted
+- Owner: UX Designer
+
+### Context
+
+The repo now contains a narrow public marketing path, an invite and sign-in flow, a founder-facing workspace, and a larger internal operator shell with several support views. Without an explicit scope decision, the application can be described too broadly and the navigation can drift toward a grab bag of equal-priority modules.
+
+### Decision
+
+Treat the minimal functional application surface as four connected layers:
+
+- public trust and conversion pages
+- invite and sign-in access
+- founder workspace
+- operator workspace
+
+Keep the scenario workspace as the primary internal product surface. Keep evidence and playbooks close to it. Treat templates, reporting, settings, opportunities, pilots, and community dashboard views as supporting or secondary surfaces instead of equal product pillars.
+
+The canonical recommendation is documented in `docs/ux/ait-236-minimal-functional-application-surface.md`.
+
+### Impact
+
+- Product framing stays aligned with the repo's current truth: invite-only audit delivery rather than self-serve SaaS.
+- Engineering gets a stable IA rule for deciding which routes belong in primary navigation.
+- Future UI work can simplify wayfinding by protecting the founder and operator workspace boundaries first.
+
+### Follow-up
+
+- Use the AIT-236 artifact when evaluating future navigation or product-positioning changes.
+- Demote internal support views before adding any new primary product destination.
+
 ## UXD-001: Keep the initial UX operating layer in `docs/ux/`
 
 - Date: 2026-05-10

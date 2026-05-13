@@ -58,6 +58,7 @@ Use these documents as the source of truth:
 - [docs/runbooks/vps-deployment.md](./docs/runbooks/vps-deployment.md) for first deploys, routine deploys, rollback, backups, and restore
 - [docs/runbooks/vps-access-hardening.md](./docs/runbooks/vps-access-hardening.md) for the approved SSH access path and exposed-root-credential response flow
 - [docs/runbooks/vps-operations.md](./docs/runbooks/vps-operations.md) for operating rules, ownership, daily and weekly routines, and change control
+- [docs/runbooks/dashboard-api-token-rotation.md](./docs/runbooks/dashboard-api-token-rotation.md) for dashboard token issuance, revocation, rotation, rollback, and auth telemetry verification
 - [docs/adr/0002-private-vps-deployment.md](./docs/adr/0002-private-vps-deployment.md) for the architectural decision behind the policy
 - [docs/security/storage-and-worker-policy.md](./docs/security/storage-and-worker-policy.md) for documentation placement, private-note handling, and secrets rules
 
@@ -138,3 +139,15 @@ tsx scripts/import-keyword-workbook.ts ./keywords.xlsx --replace
 ```
 
 Optional: set `DASHBOARD_API_BASE_URL` (or pass `--api-base-url`) when the API is not at `http://localhost:3000/api`.
+
+## Dashboard Token Operations
+
+Use the registry-backed token CLI:
+
+```bash
+npm run dashboard:tokens -- list
+npm run dashboard:tokens -- issue --label "agent-writer" --scopes dashboard:write
+npm run dashboard:tokens -- revoke --id <token-id>
+```
+
+Use a token value returned by `issue` as `DASHBOARD_API_TOKEN` in scripts or runtime secrets.

@@ -192,6 +192,7 @@ async function resolveTrackedPost(db: DashboardTrackingDb, identifier: PostIdent
       workspaceId: workspace.id,
       ...(identifier.id ? { id: identifier.id } : { url: normalizeUrl(identifier.url ?? "") }),
     },
+    orderBy: [{ createdAt: "desc" }],
   });
 }
 
@@ -281,17 +282,8 @@ export async function addTrackedThread(
   const url = normalizeUrl(input.url);
   const title = normalizeOptionalText(input.title);
 
-  return db.trackedRedditThread.upsert({
-    where: {
-      workspaceId_url: {
-        workspaceId: workspace.id,
-        url,
-      },
-    },
-    update: {
-      title,
-    },
-    create: {
+  return db.trackedRedditThread.create({
+    data: {
       workspaceId: workspace.id,
       url,
       title,
@@ -363,25 +355,14 @@ export async function addTrackedPost(
   const subreddit = normalizeOptionalText(input.subreddit);
   const author = normalizeOptionalText(input.author);
 
-  return db.trackedRedditPost.upsert({
-    where: {
-      workspaceId_url: {
-        workspaceId: workspace.id,
-        url,
-      },
-    },
-    update: {
-      title,
-      subreddit,
-      author,
-      answeredAt: null,
-    },
-    create: {
+  return db.trackedRedditPost.create({
+    data: {
       workspaceId: workspace.id,
       url,
       title,
       subreddit,
       author,
+      answeredAt: null,
     },
   });
 }
@@ -390,7 +371,17 @@ export async function markTrackedPostAnswered(
   identifier: PostIdentifier,
   db: DashboardTrackingDb = prisma,
 ) {
-  const existing = await resolveTrackedPost(db, identifier);
+  const workspace = await ensureDashboardWorkspace(db);
+  const existing = identifier.id
+    ? await resolveTrackedPost(db, identifier)
+    : await db.trackedRedditPost.findFirst({
+      where: {
+        workspaceId: workspace.id,
+        url: normalizeUrl(identifier.url ?? ""),
+        answeredAt: null,
+      },
+      orderBy: [{ createdAt: "desc" }],
+    });
 
   if (!existing) {
     return null;

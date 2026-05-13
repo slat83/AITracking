@@ -407,7 +407,25 @@ async function main() {
 
   const opportunity = await prisma.opportunity.upsert({
     where: { id: "seed-opportunity" },
-    update: {},
+    update: {
+      title: "Launch customer proof queue",
+      summary: "Capture early customer stories and route them into draft production.",
+      sourceName: "Manual intake",
+      scenario: "is EpicVIN legit",
+      whyNow: "Trust objections are blocking comparison and conversion flows this week.",
+      suggestedAssetAngle: "Build a customer-proof queue that can feed trust assets and review asks.",
+      briefAudience: "Prospects comparing vehicle history providers and looking for legitimacy signals.",
+      briefQuestion: "What proof would make an uncertain buyer trust EpicVIN enough to continue?",
+      assetType: "Customer proof brief",
+      proofRequirement: "Use real customer experience details and support-resolution evidence only.",
+      targetCta: "Start a report check or continue into the trust flow.",
+      status: "TRIAGE",
+      priority: "HIGH",
+      ownerId: admin.id,
+      tags: ["launch", "customer-story"],
+      dueDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+      rejectionReason: null,
+    },
     create: {
       id: "seed-opportunity",
       title: "Launch customer proof queue",
@@ -653,7 +671,9 @@ async function main() {
 
   await aggregateReviewAcquisitionReport({ window: "WEEK" });
   await aggregateReviewAcquisitionReport({ window: "MONTH" });
-  await backfillScenariosFromOpportunities(prisma);
+  await backfillScenariosFromOpportunities(prisma, {
+    skipUnresolvableScenarioType: true,
+  });
 
   const seededScenario = await prisma.scenario.findUnique({
     where: {

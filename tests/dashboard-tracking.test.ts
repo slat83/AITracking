@@ -39,35 +39,29 @@ function createDashboardDb() {
       delete: vi.fn(),
     },
     trackedRedditPost: {
-      upsert: vi.fn(async ({ create, update, where }: {
-        create: typeof posts[number];
-        update: Partial<typeof posts[number]>;
-        where: { workspaceId_url: { workspaceId: string; url: string } };
+      create: vi.fn(async ({ data }: {
+        data: Omit<typeof posts[number], "id" | "createdAt" | "updatedAt">;
       }) => {
-        const existing = posts.find((post) => (
-          post.workspaceId === where.workspaceId_url.workspaceId && post.url === where.workspaceId_url.url
-        ));
-
-        if (existing) {
-          Object.assign(existing, update, { updatedAt: new Date("2026-05-11T10:00:00.000Z") });
-          return existing;
-        }
-
         const next = {
-          ...create,
+          ...data,
           id: `post-${posts.length + 1}`,
           createdAt: new Date("2026-05-11T09:00:00.000Z"),
           updatedAt: new Date("2026-05-11T09:00:00.000Z"),
-          answeredAt: create.answeredAt ?? null,
+          answeredAt: data.answeredAt ?? null,
         };
         posts.push(next);
         return next;
       }),
-      findFirst: vi.fn(async ({ where }: { where: { id?: string; workspaceId: string; url?: string } }) => (
-        posts.find((post) => (
-          post.workspaceId === where.workspaceId
-          && (where.id ? post.id === where.id : post.url === where.url)
-        )) ?? null
+      findFirst: vi.fn(async ({ where }: {
+        where: { id?: string; workspaceId: string; url?: string; answeredAt?: null };
+      }) => (
+        posts
+          .filter((post) => (
+            post.workspaceId === where.workspaceId
+            && (where.id ? post.id === where.id : post.url === where.url)
+            && (where.answeredAt === null ? post.answeredAt === null : true)
+          ))
+          .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0] ?? null
       )),
       findMany: vi.fn(async ({ where }: {
         where: { workspaceId: string; answeredAt: null | { not: null } };
@@ -131,5 +125,20 @@ describe("dashboard tracking", () => {
     expect(afterAnswer.postsToAnswer).toHaveLength(0);
     expect(afterAnswer.answeredPosts).toHaveLength(1);
     expect(afterAnswer.answeredPosts[0]?.answeredAt).toBeInstanceOf(Date);
+  });
+
+  it("supports appending the same reddit URL multiple times", async () => {
+    const db = createDashboardDb();
+    const url = "https://www.reddit.com/r/saas/comments/abc123/launch_feedback/";
+
+    await addTrackedPost({ url, title: "First pass" }, db as never);
+    await markTrackedPostAnswered({ url }, db as never);
+    await addTrackedPost({ url, title: "Second pass follow-up" }, db as never);
+
+    const snapshot = await listTrackedPosts(db as never);
+    expect(snapshot.postsToAnswer).toHaveLength(1);
+    expect(snapshot.answeredPosts).toHaveLength(1);
+    expect(snapshot.postsToAnswer[0]?.title).toBe("Second pass follow-up");
+    expect(snapshot.answeredPosts[0]?.title).toBe("First pass");
   });
 });

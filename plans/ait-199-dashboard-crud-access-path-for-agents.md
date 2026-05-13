@@ -53,3 +53,13 @@ Reason: this preserves current product behavior while enabling machine-to-machin
 1. Introduce token registry (hashed tokens, per-consumer metadata, revoke-by-id).
 2. Add scoped permissions (`dashboard:read`, `dashboard:write`) and enforce at route level.
 3. Add optional workspace scoping if multi-workspace agent operations become a requirement.
+
+## Disposition
+
+- Status recommendation: `done`
+- Delivery commit: `1c5d670` (`feat(dashboard): add hybrid auth path for agent CRUD access`)
+- Verification evidence:
+  - `npm run test -- tests/dashboard-api-auth.test.ts tests/keywords-route.test.ts`
+  - `npm run typecheck`
+- Operational follow-up required outside code:
+  - Rotate the token that was previously shared in chat.

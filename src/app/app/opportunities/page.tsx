@@ -51,6 +51,60 @@ function formatEnumLabel(value: string) {
     .join(" ");
 }
 
+function trimText(value: string | null | undefined) {
+  const normalized = value?.trim();
+  return normalized && normalized.length > 0 ? normalized : null;
+}
+
+function resolveOpportunityNextAction(input: {
+  recommendedNextAction: string | null;
+  blockedReason: string | null;
+  status: string;
+  proofReadiness: string;
+  approvalStatus: string;
+  tasks: Array<{ title: string }>;
+}) {
+  const configuredNextAction = trimText(input.recommendedNextAction);
+
+  if (configuredNextAction) {
+    return configuredNextAction;
+  }
+
+  const openTask = input.tasks.find((task) => trimText(task.title));
+  const openTaskLabel = openTask ? trimText(openTask.title) : null;
+  if (openTaskLabel) {
+    return openTaskLabel;
+  }
+
+  if (input.approvalStatus === "PENDING" || input.approvalStatus === "REJECTED") {
+    return "Resolve approval before execution can continue.";
+  }
+
+  if (input.blockedReason) {
+    return `Resolve blocker: ${input.blockedReason}`;
+  }
+
+  if (
+    input.status === "INTAKE"
+    || input.status === "TRIAGE"
+  ) {
+    return "Qualify the scenario and complete missing context.";
+  }
+
+  if (
+    input.status === "READY_FOR_DRAFT"
+    || input.status === "ACTIVE"
+    || input.status === "BLOCKED"
+  ) {
+    if (input.proofReadiness !== "READY") {
+      return "Close proof gaps before execution continues.";
+    }
+    return "Run the next execution step for this scenario.";
+  }
+
+  return "Review the scenario context.";
+}
+
 function getHealthLabel(input: {
   blockedReason: string | null;
   proofReadiness: string;
@@ -93,6 +147,7 @@ export default async function OpportunitiesPage({ searchParams }: PageProps) {
           select: {
             id: true,
             status: true,
+            approvalStatus: true,
             proofReadiness: true,
             blockedReason: true,
             recommendedNextAction: true,
@@ -367,7 +422,14 @@ export default async function OpportunitiesPage({ searchParams }: PageProps) {
                           <article className="workflowScenarioCard">
                             <span className="metaLabel">Next best action</span>
                             <p className="metaValue">
-                              {opportunity.scenarioRecord.recommendedNextAction ?? "Review the scenario context."}
+                              {resolveOpportunityNextAction({
+                                recommendedNextAction: opportunity.scenarioRecord.recommendedNextAction,
+                                blockedReason: opportunity.scenarioRecord.blockedReason,
+                                status: opportunity.scenarioRecord.status,
+                                proofReadiness: opportunity.scenarioRecord.proofReadiness,
+                                approvalStatus: opportunity.scenarioRecord.approvalStatus,
+                                tasks: opportunity.scenarioRecord.tasks,
+                              })}
                             </p>
                           </article>
                           <article className="workflowScenarioCard">
