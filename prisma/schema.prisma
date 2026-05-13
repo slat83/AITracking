@@ -253,6 +253,25 @@ model Workspace {
   trackedKeywords TrackedKeyword[]
   trackedThreads TrackedRedditThread[]
   trackedPosts  TrackedRedditPost[]
+  dashboardApiTokens DashboardApiToken[]
+}
+
+model DashboardApiToken {
+  id          String    @id @default(cuid())
+  workspaceId String?
+  label       String
+  tokenHash   String    @unique
+  scopes      String[]
+  consumerId  String?
+  notes       String?
+  lastUsedAt  DateTime?
+  revokedAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  workspace   Workspace? @relation(fields: [workspaceId], references: [id])
+
+  @@index([workspaceId, revokedAt])
+  @@index([revokedAt, createdAt])
 }
 
 model Account {
@@ -293,7 +312,7 @@ model TrackedRedditThread {
   updatedAt   DateTime  @updatedAt
   workspace   Workspace @relation(fields: [workspaceId], references: [id])
 
-  @@unique([workspaceId, url])
+  @@index([workspaceId, url])
   @@index([workspaceId, createdAt])
 }
 
@@ -309,7 +328,7 @@ model TrackedRedditPost {
   updatedAt   DateTime  @updatedAt
   workspace   Workspace @relation(fields: [workspaceId], references: [id])
 
-  @@unique([workspaceId, url])
+  @@index([workspaceId, url])
   @@index([workspaceId, answeredAt, createdAt])
 }
 
