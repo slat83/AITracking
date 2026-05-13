@@ -7,12 +7,11 @@ Base path: `/api`
 ## Access and Auth
 
 - All dashboard endpoints require authenticated access.
-- Agent/integration access: `Authorization: Bearer <DASHBOARD_API_TOKEN>`.
+- Agent/integration access: `Authorization: Bearer <token>`.
 - Signed-in operator access: NextAuth session cookie with `EDITOR` or `ADMIN` role.
-- Bearer tokens are validated with constant-time comparison against `process.env.DASHBOARD_API_TOKEN`.
-- If a bearer token is sent and `DASHBOARD_API_TOKEN` is not configured, the API returns `500` with `{ "ok": false, "error": "DASHBOARD_API_TOKEN is not configured." }`.
 - Unauthorized response: `401` with `{ "ok": false, "error": "Authentication is required." }`
 - Forbidden response (session role below `EDITOR`): `403` with `{ "ok": false, "error": "Editor access is required." }`
+- Forbidden response (API token missing route scope): `403` with `{ "ok": false, "error": "Token scope <scope> is required." }`
 
 ### Authorization decision order
 
@@ -20,21 +19,86 @@ For protected dashboard routes, authorization executes in this order:
 
 1. Parse `Authorization` and accept only `Bearer <token>` with one token segment.
 2. If a bearer token is present:
-3. Read `DASHBOARD_API_TOKEN` from env.
-4. Return `500` if token config is missing.
-5. Return `401` if token does not match.
-6. Treat request as authenticated `EDITOR` principal when token matches.
-7. If bearer token is absent:
-8. Resolve NextAuth server session.
-9. Return `401` when no session/user exists.
-10. Return `403` when session role is below `EDITOR`.
-11. Otherwise allow the request with session principal context.
+3. Attempt legacy env-token match (`DASHBOARD_API_TOKEN`, `DASHBOARD_API_TOKEN_PREVIOUS`) for compatibility during migration.
+4. Otherwise resolve token from `DashboardApiToken` registry by SHA-256 hash (`tokenHash`) and reject revoked tokens.
+5. Return `401` if no active token matches.
+6. Enforce route scope requirement:
+7. Return `403` when token is valid but missing required scope.
+8. Record `lastUsedAt` for registry-backed token matches.
+9. If bearer token is absent:
+10. Resolve NextAuth server session.
+11. Return `401` when no session/user exists.
+12. Return `403` when session role is below `EDITOR`.
+13. Otherwise allow the request with session principal context.
 
-### Operational constraints
+### Scope model
 
-- The token model is currently a single shared secret per environment.
-- There is no in-app token rotation, token registry, or fine-grained scope model yet.
-- Keep `DASHBOARD_API_TOKEN` out of git, docs, and ticket attachments.
+- `dashboard:read`: required for read routes (`GET`)
+- `dashboard:write`: required for mutating routes (`POST`, `DELETE`), and implicitly grants `dashboard:read`
+
+Scope mapping by route:
+
+| Route | Required scope |
+| --- | --- |
+| `GET /api/keywords` | `dashboard:read` |
+| `POST /api/keywords` | `dashboard:write` |
+| `DELETE /api/keywords` | `dashboard:write` |
+| `GET /api/threads` | `dashboard:read` |
+| `POST /api/threads` | `dashboard:write` |
+| `DELETE /api/threads` | `dashboard:write` |
+| `GET /api/posts` | `dashboard:read` |
+| `POST /api/posts` | `dashboard:write` |
+| `DELETE /api/posts` | `dashboard:write` |
+
+### Token registry model
+
+`DashboardApiToken` stores:
+
+- `id` (revoke-by-id handle)
+- `label` (consumer label)
+- `tokenHash` (SHA-256 hash only; raw token is never stored)
+- `scopes` (`dashboard:read`, `dashboard:write`)
+- optional `workspaceId` (reserved for future workspace-scoped enforcement)
+- optional consumer metadata (`consumerId`, `notes`)
+- `lastUsedAt`
+- `revokedAt`
+
+### Issuance and revocation operations
+
+Use the token management CLI:
+
+- `npm run dashboard:tokens -- issue --label "<consumer>" --scopes dashboard:write`
+- `npm run dashboard:tokens -- list`
+- `npm run dashboard:tokens -- revoke --id <token-id>`
+
+Raw token values are shown only at issuance time and must be moved into approved secret storage immediately.
+
+### Optional workspace scoping design (future-ready)
+
+Current dashboard tracking routes operate on a default workspace. For multi-workspace operations, use this extension path:
+
+1. Require `workspaceId` on token records intended for scoped use.
+2. Resolve request workspace context (header, route segment, or explicit payload field).
+3. Enforce `token.workspaceId === request.workspaceId` for scoped tokens.
+4. Keep `workspaceId = null` as global tokens for system-level automation during migration.
+
+This design keeps compatibility while allowing gradual tenant isolation without a full auth rewrite.
+
+### Bearer token telemetry
+
+Bearer token authentication attempts emit structured logs with event name `dashboard_token_auth` and fields:
+
+- `timestamp`
+- `method`
+- `pathname`
+- `outcome` (`authenticated`, `invalid_token`, `insufficient_scope`)
+- `requiredScope`
+- `source` (`registry`, `legacy_env`, `null`)
+- `tokenId`
+- `tokenLabel`
+- `tokenFingerprint` (redacted SHA-256 prefix)
+- `callerFingerprint` (redacted SHA-256 prefix from request source metadata when available)
+- `matchedTokenSlot` (`primary`, `previous`, or `null`)
 
 ## `GET /api/keywords`
 

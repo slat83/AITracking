@@ -221,6 +221,16 @@ If rollback is required:
 
 ## Follow-on enforcement
 
+## Optional local release verification
+
+To mirror CI locally before opening or updating a production-impacting pull request, run:
+
+```bash
+./scripts/pre-push-verify-release.sh
+```
+
+Optional: add this as `.git/hooks/pre-push` to enforce verification on local pushes.
+
 This runbook defines process. Engineering should keep these enforcement controls in place:
 
 - branch protection on `main`
@@ -228,3 +238,11 @@ This runbook defines process. Engineering should keep these enforcement controls
 - the `Deploy VPS` workflow restricted to the `production` environment
 - pull request template with deploy and rollback fields
 - optional local hooks for pre-push verification
+
+Apply the branch protection policy with:
+
+```bash
+./ops/github/enforce-release-policy.sh --repo <owner/repo>
+```
+
+Use `--dry-run` first when validating in a new repository.
