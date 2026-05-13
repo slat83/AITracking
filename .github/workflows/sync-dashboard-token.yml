@@ -1,0 +1,112 @@
+name: Sync Dashboard API Token
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: production-dashboard-token-sync
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Configure SSH
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "${{ secrets.VPS_SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "${{ secrets.VPS_SSH_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+
+      - name: Sync token and restart app
+        shell: bash
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_PORT: ${{ secrets.VPS_PORT }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_APP_DIR: ${{ secrets.VPS_APP_DIR }}
+          DASHBOARD_API_TOKEN: ${{ secrets.DASHBOARD_API_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${DASHBOARD_API_TOKEN}" ]; then
+            echo "DASHBOARD_API_TOKEN secret is required in production environment." >&2
+            exit 1
+          fi
+
+          if [ -z "${VPS_PORT}" ]; then
+            VPS_PORT=22
+          fi
+
+          ssh \
+            -o BatchMode=yes \
+            -o StrictHostKeyChecking=yes \
+            -o UserKnownHostsFile=~/.ssh/known_hosts \
+            -p "${VPS_PORT}" \
+            "${VPS_USER}@${VPS_HOST}" \
+            "VPS_APP_DIR='${VPS_APP_DIR}' DASHBOARD_API_TOKEN='${DASHBOARD_API_TOKEN}' bash -s" <<'EOF'
+          set -euo pipefail
+
+          shared_env="${VPS_APP_DIR}/shared/.env.production"
+
+          if [ ! -f "${shared_env}" ]; then
+            echo "Missing production env file: ${shared_env}" >&2
+            exit 1
+          fi
+
+          current_token="$(sed -n 's/^DASHBOARD_API_TOKEN=//p' "${shared_env}" | tail -n 1)"
+          previous_token="$(sed -n 's/^DASHBOARD_API_TOKEN_PREVIOUS=//p' "${shared_env}" | tail -n 1)"
+
+          tmp_env="$(mktemp)"
+          grep -vE '^DASHBOARD_API_TOKEN(_PREVIOUS)?=' "${shared_env}" > "${tmp_env}"
+
+          printf '\nDASHBOARD_API_TOKEN=%s\n' "${DASHBOARD_API_TOKEN}" >> "${tmp_env}"
+
+          if [ -n "${current_token}" ] && [ "${current_token}" != "${DASHBOARD_API_TOKEN}" ]; then
+            printf 'DASHBOARD_API_TOKEN_PREVIOUS=%s\n' "${current_token}" >> "${tmp_env}"
+          elif [ -n "${previous_token}" ] && [ "${previous_token}" != "${DASHBOARD_API_TOKEN}" ]; then
+            printf 'DASHBOARD_API_TOKEN_PREVIOUS=%s\n' "${previous_token}" >> "${tmp_env}"
+          fi
+
+          mv "${tmp_env}" "${shared_env}"
+
+          cd "${VPS_APP_DIR}/current"
+          docker compose --env-file "${shared_env}" -f docker-compose.prod.yml up -d --build --remove-orphans
+
+          app_container="$(docker compose --env-file "${shared_env}" -f docker-compose.prod.yml ps -q app)"
+          for attempt in $(seq 1 30); do
+            health_status="$(docker inspect --format '{{.State.Health.Status}}' "${app_container}")"
+            if [ "${health_status}" = "healthy" ]; then
+              break
+            fi
+            if [ "${attempt}" -eq 30 ]; then
+              echo "App container did not become healthy. Last status: ${health_status}" >&2
+              docker compose --env-file "${shared_env}" -f docker-compose.prod.yml logs --tail=200 app >&2
+              exit 1
+            fi
+            sleep 2
+          done
+
+          echo "SYNC_STATUS=success"
+          EOF
+
+      - name: Publish summary
+        shell: bash
+        run: |
+          {
+            echo "## Dashboard Token Sync"
+            echo
+            echo "- Status: success"
+            echo "- Trigger: \`${{ github.event_name }}\`"
+            echo "- Workflow run: \`${{ github.run_id }}\`"
+          } >> "${GITHUB_STEP_SUMMARY}"
