@@ -10,11 +10,13 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "hygiene:check": "tsx scripts/check-workspace-hygiene.ts",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
     "db:seed": "tsx prisma/seed.ts",
     "jobs:run": "tsx scripts/run-jobs.ts",
+    "dashboard:tokens": "tsx scripts/manage-dashboard-api-tokens.ts",
     "postinstall": "prisma generate"
   },
   "keywords": [
