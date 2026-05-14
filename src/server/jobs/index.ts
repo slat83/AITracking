@@ -4,6 +4,10 @@ import {
   aggregateAiVisibilityReport,
   AI_VISIBILITY_REPORT_JOB_KIND,
 } from "@/server/analytics/visibility";
+import {
+  AI_RECOMMENDATION_SHARE_JOB_KIND,
+  executeRecommendationShareRun,
+} from "@/server/ai-recommendation-share/scheduler";
 import { prisma } from "@/server/db/client";
 
 type EnqueueInput = {
@@ -112,6 +116,30 @@ export async function processJob(jobId: string) {
               reportDate: summary.reportDate.toISOString(),
               pages: summary.pages,
               events: summary.events,
+            },
+          },
+        });
+        break;
+      }
+      case AI_RECOMMENDATION_SHARE_JOB_KIND: {
+        const payload = job.payload;
+
+        if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
+          throw new Error(`Malformed ${AI_RECOMMENDATION_SHARE_JOB_KIND} payload.`);
+        }
+
+        const completedRun = await executeRecommendationShareRun(
+          payload as Record<string, unknown>,
+        );
+
+        await prisma.auditEvent.create({
+          data: {
+            entityType: "job",
+            entityId: job.id,
+            action: "ai-recommendation-share.run.completed",
+            payload: {
+              runId: completedRun.id,
+              status: completedRun.status,
             },
           },
         });
