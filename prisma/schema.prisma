@@ -117,6 +117,24 @@ enum ReviewReportWindow {
   MONTH
 }
 
+enum AiRecommendationRunStatus {
+  RUNNING
+  COMPLETED
+}
+
+enum AiRecommendationCheckValidity {
+  VALID
+  INVALID
+}
+
+enum AiRecommendationClassification {
+  RECOMMENDED
+  MENTIONED
+  NOT_MENTIONED
+  NEGATIVE_MENTION
+  UNCLASSIFIED
+}
+
 enum ScenarioStatus {
   INTAKE
   TRIAGE
@@ -254,6 +272,9 @@ model Workspace {
   trackedThreads TrackedRedditThread[]
   trackedPosts  TrackedRedditPost[]
   dashboardApiTokens DashboardApiToken[]
+  aiRecommendationRuns AiRecommendationRun[]
+  aiRecommendationQueries AiRecommendationQuery[]
+  aiRecommendationSources AiRecommendationSource[]
 }
 
 model DashboardApiToken {
@@ -873,4 +894,92 @@ model ReviewAcquisitionReport {
 
   @@unique([window, periodStart, periodEnd])
   @@index([window, periodStart])
+}
+
+model AiRecommendationQuery {
+  id               String   @id @default(cuid())
+  workspaceId      String
+  querySetVersion  String
+  queryId          String
+  queryClass       String
+  promptText       String
+  locale           String   @default("en-US")
+  isCore           Boolean  @default(true)
+  isActive         Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  workspace        Workspace @relation(fields: [workspaceId], references: [id])
+  checks           AiRecommendationCheck[]
+
+  @@unique([workspaceId, querySetVersion, queryId])
+  @@index([workspaceId, querySetVersion, isActive])
+}
+
+model AiRecommendationSource {
+  id               String   @id @default(cuid())
+  workspaceId      String
+  sourceSetVersion String
+  sourceId         String
+  sourceName       String
+  sourceTier       Int
+  isActive         Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  workspace        Workspace @relation(fields: [workspaceId], references: [id])
+  checks           AiRecommendationCheck[]
+
+  @@unique([workspaceId, sourceSetVersion, sourceId])
+  @@index([workspaceId, sourceSetVersion, isActive])
+}
+
+model AiRecommendationRun {
+  id                        String                  @id @default(cuid())
+  workspaceId               String
+  targetEntity              String
+  measurementWindow         String
+  methodologyVersion        String
+  querySetVersion           String
+  sourceSetVersion          String
+  classificationRuleVersion String
+  targetAliasesVersion      String
+  status                    AiRecommendationRunStatus @default(RUNNING)
+  startedAt                 DateTime                @default(now())
+  completedAt               DateTime?
+  notes                     String?
+  createdAt                 DateTime                @default(now())
+  updatedAt                 DateTime                @updatedAt
+  workspace                 Workspace               @relation(fields: [workspaceId], references: [id])
+  checks                    AiRecommendationCheck[]
+
+  @@index([workspaceId, createdAt])
+  @@index([workspaceId, status, measurementWindow])
+}
+
+model AiRecommendationCheck {
+  id                      String                        @id @default(cuid())
+  runId                   String
+  queryRecordId           String
+  sourceRecordId          String
+  attemptNumber           Int                           @default(1)
+  capturedAt              DateTime                      @default(now())
+  validity                AiRecommendationCheckValidity @default(VALID)
+  invalidReason           String?
+  rawResponse             String                        @db.Text
+  normalizedResponse      String?                       @db.Text
+  responseTruncatedFlag   Boolean                       @default(false)
+  requestEnvelope         Json?
+  classification          AiRecommendationClassification @default(UNCLASSIFIED)
+  classificationRationale String?
+  reviewRequired          Boolean                       @default(false)
+  reviewedAt              DateTime?
+  reviewerNote            String?
+  createdAt               DateTime                      @default(now())
+  updatedAt               DateTime                      @updatedAt
+  run                     AiRecommendationRun           @relation(fields: [runId], references: [id])
+  queryRecord             AiRecommendationQuery         @relation(fields: [queryRecordId], references: [id])
+  sourceRecord            AiRecommendationSource        @relation(fields: [sourceRecordId], references: [id])
+
+  @@unique([runId, queryRecordId, sourceRecordId, attemptNumber])
+  @@index([runId, capturedAt])
+  @@index([runId, validity, classification])
 }
