@@ -2,7 +2,7 @@ import {
   AiRecommendationCheckValidity,
   AiRecommendationClassification,
   AiRecommendationRunStatus,
-  type Prisma,
+  Prisma,
 } from "@prisma/client";
 
 import { prisma } from "@/server/db/client";
