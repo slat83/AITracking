@@ -47,19 +47,65 @@ export default async function DashboardPage() {
   return (
     <main className="shell dashboard workflowPage">
       <header className="topbar workspaceHeader">
-        <div className="topbarInner workspaceHeaderInner">
-          <div>
-            <div className="eyebrow">Operator workflow</div>
-            <h1 className="shellHeading">Community monitoring dashboard</h1>
-            <p className="muted workspaceIntro">
-              This shell is intentionally scoped to tracked Reddit keywords, threads, and posts.
-            </p>
-          </div>
-          <div className="workspaceHeaderActions">
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 12,
+            flexWrap: "wrap",
+          }}
+        >
+          <Link
+            href="/app"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              padding: "8px 12px",
+              borderRadius: 999,
+              border: "1px solid var(--line)",
+              background: "var(--surface-strong)",
+              color: "var(--muted)",
+              fontSize: "0.86rem",
+              letterSpacing: "0.04em",
+              textTransform: "uppercase",
+            }}
+          >
+            Flowvory operator shell
+          </Link>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+            <span
+              style={{
+                fontSize: "0.8rem",
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+                color: "var(--muted)",
+              }}
+            >
+              Live monitoring surface
+            </span>
             <div className="pill">{session.user.role}</div>
           </div>
         </div>
-        <AppShellNav activeKey="dashboard" />
+        <div style={{ textAlign: "center" }}>
+          <div>
+            <div className="eyebrow">Operator workflow</div>
+            <h1 style={{ fontSize: "clamp(2rem, 4.4vw, 3.1rem)", lineHeight: 1.02, letterSpacing: "-0.03em", margin: "12px 0 0" }}>
+              Community monitoring dashboard
+            </h1>
+            <p className="muted workspaceIntro" style={{ marginLeft: "auto", marginRight: "auto" }}>
+              This shell is intentionally scoped to tracked Reddit keywords, threads, and posts.
+            </p>
+          </div>
+        </div>
+        <AppShellNav
+          activeKey="dashboard"
+          secondaryItems={[
+            { key: "playbooks", label: "Playbooks", href: "/app/playbooks" },
+            { key: "reporting", label: "Reporting", href: "/app/reporting" },
+            { key: "settings", label: "Settings", href: "/app/settings" },
+          ]}
+        />
       </header>
       <section className="card dashboardCard workflowSection">
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
