@@ -100,6 +100,7 @@ export default async function DashboardPage() {
         </div>
         <AppShellNav
           activeKey="dashboard"
+          panelMode="embedded"
           secondaryItems={[
             { key: "playbooks", label: "Playbooks", href: "/app/playbooks" },
             { key: "reporting", label: "Reporting", href: "/app/reporting" },
