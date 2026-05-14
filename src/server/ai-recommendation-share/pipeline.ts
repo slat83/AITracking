@@ -2,6 +2,7 @@ import {
   AiRecommendationCheckValidity,
   AiRecommendationClassification,
   AiRecommendationRunStatus,
+  Prisma,
 } from "@prisma/client";
 
 import { prisma } from "@/server/db/client";
@@ -35,7 +36,7 @@ export type RecordRecommendationCheckInput = {
   invalidReason?: string | null;
   rawResponse: string;
   normalizedResponse?: string | null;
-  requestEnvelope?: Record<string, unknown> | null;
+  requestEnvelope?: Prisma.InputJsonValue | null;
   responseTruncatedFlag?: boolean;
   classification: AiRecommendationClassification;
   classificationRationale?: string | null;
@@ -96,7 +97,7 @@ export async function recordRecommendationCheck(input: RecordRecommendationCheck
       invalidReason: input.invalidReason ?? null,
       rawResponse: input.rawResponse,
       normalizedResponse: input.normalizedResponse ?? null,
-      requestEnvelope: input.requestEnvelope ?? null,
+      requestEnvelope: input.requestEnvelope ?? Prisma.JsonNull,
       responseTruncatedFlag: input.responseTruncatedFlag ?? false,
       classification: input.classification,
       classificationRationale: input.classificationRationale ?? null,

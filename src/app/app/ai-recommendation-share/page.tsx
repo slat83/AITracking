@@ -51,7 +51,7 @@ export default async function AiRecommendationSharePage() {
             <Link className="button buttonSecondary" href="/app">Back to workspace</Link>
           </div>
         </div>
-        <AppShellNav activeKey="reporting" />
+        <AppShellNav activeKey="aiRecommendationShare" />
       </header>
 
       <section className="workspaceSummaryGrid" style={{ marginTop: 18 }}>
