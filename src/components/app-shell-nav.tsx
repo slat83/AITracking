@@ -2,7 +2,9 @@ import Link from "next/link";
 import type { ComponentProps } from "react";
 
 const APP_SHELL_PRIMARY_NAV_ITEMS = [
+  { key: "workspace", label: "Scenario workspace", href: "/app" },
   { key: "dashboard", label: "Reddit workflow", href: "/app/dashboard" },
+  { key: "aiRecommendationShare", label: "AI recommendation share", href: "/app/ai-recommendation-share" },
 ] as const;
 
 export type AppShellNavKey = (typeof APP_SHELL_PRIMARY_NAV_ITEMS)[number]["key"]

@@ -36,7 +36,7 @@ export type RecordRecommendationCheckInput = {
   invalidReason?: string | null;
   rawResponse: string;
   normalizedResponse?: string | null;
-  requestEnvelope?: Prisma.InputJsonValue;
+  requestEnvelope?: Prisma.InputJsonValue | null;
   responseTruncatedFlag?: boolean;
   classification: AiRecommendationClassification;
   classificationRationale?: string | null;
